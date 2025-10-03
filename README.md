@@ -1,18 +1,22 @@
-SenhaFacil 🎟️
-Um sistema de gerenciamento de filas de atendimento em tempo real, desenvolvido com Django e Channels. O objetivo é modernizar e otimizar a experiência de espera em ambientes como clínicas e laboratórios, permitindo que pacientes acompanhem sua posição na fila através de seus próprios dispositivos.
+🎟️ SenhaFacil
+
+SenhaFacil é um sistema de gerenciamento de filas de atendimento em tempo real, desenvolvido com Django e Channels.
+O objetivo é modernizar e otimizar a experiência de espera em ambientes como clínicas e laboratórios, permitindo que pacientes acompanhem sua posição na fila diretamente de seus dispositivos.
 
 ✨ Funcionalidades
+
 Emissão de Senhas: Pacientes podem gerar senhas para diferentes tipos de atendimento (ex: Normal, Prioritário).
 
 Acompanhamento em Tempo Real: A tela do paciente se conecta via WebSocket e é atualizada instantaneamente quando sua senha é chamada.
 
-Painel do Atendente: Uma interface segura para atendentes visualizarem as filas de espera e chamarem o próximo paciente.
+Painel do Atendente: Interface segura para visualização das filas e chamada do próximo paciente.
 
-Diferenciação Visual: Interfaces que utilizam cores e badges para diferenciar tipos de atendimento e status.
+Diferenciação Visual: Cores e badges para diferenciar tipos de atendimento e status.
 
-Administração via Django Admin: Gerenciamento de tipos de filas diretamente pelo painel de administrador.
+Administração via Django Admin: Gerenciamento de filas e configurações diretamente pelo painel administrativo.
 
 🛠️ Tecnologias Utilizadas
+
 Backend: Python, Django
 
 Tempo Real: Django Channels, Daphne (ASGI Server)
@@ -24,98 +28,63 @@ Frontend: HTML, Bootstrap 5, JavaScript
 Versionamento: Git & GitHub
 
 🚀 Instalação e Configuração
-Siga os passos abaixo para configurar o ambiente de desenvolvimento local.
 
-Pré-requisitos
+Siga os passos abaixo para configurar o ambiente de desenvolvimento local:
+
+🔹 Pré-requisitos
+
 Python 3.11+
 
 Git
 
 PostgreSQL
 
-Passo a Passo
-Clone o repositório:
+🔹 Passo a Passo
 
-Bash
-
+1. Clone o repositório 
 git clone https://github.com/pabloaugussto/sistemadefila.git
 cd sistemadefila
-Crie e ative o ambiente virtual:
-
-Bash
-
+2. Crie e ative o ambiente virtual
 # Criar o ambiente
 python -m venv venv
-
 # Ativar no Windows
 venv\Scripts\activate
-Instale as dependências:
-
-Bash
-
+3. Instale as dependências
 pip install -r requirements.txt
-Configure o Banco de Dados:
 
-Certifique-se de que o PostgreSQL está rodando.
+4. Configure o Banco de Dados
 
-Crie um novo banco de dados para o projeto. Ex: minhasenha_db.
+Certifique-se de que o PostgreSQL está em execução.
 
-Configure as Variáveis de Ambiente:
+Crie um banco de dados, por exemplo: minhasenha_db.
+
+5. Configure as variáveis de ambiente
 
 Renomeie o arquivo .env.example para .env.
 
-Abra o arquivo .env e preencha com suas credenciais do PostgreSQL.
-
-Snippet de código
-
-SECRET_KEY='coloque_uma_chave_secreta_aqui'
+Preencha com suas credenciais:
+SECRET_KEY='sua_chave_secreta_aqui'
 DEBUG=True
 DB_NAME='minhasenha_db'
 DB_USER='seu_usuario_postgres'
 DB_PASSWORD='sua_senha_postgres'
 DB_HOST='localhost'
 DB_PORT='5432'
-Aplique as migrações:
 
-Bash
-
+6. Aplique as migrações
 python manage.py migrate
-Crie um superusuário para acessar o painel de admin:
-
-Bash
-
+7. Crie um superusuário (para acessar o admin)
 python manage.py createsuperuser
-▶️ Como Executar o Projeto
-Após a configuração, você pode iniciar o servidor.
 
-Opção 1 (Recomendada - Script run.bat)
-Na pasta raiz do projeto, execute o script que criamos:
-
-Bash
-
-run.bat
-Ele irá ativar o ambiente virtual e iniciar o servidor Daphne automaticamente.
-
-Opção 2 (Manual - Daphne)
-Se preferir, execute os comandos manualmente:
-
-Bash
-
-# 1. Ative o ambiente virtual
+Como Executar o Projeto
+🔹 Opção 1 (Recomendada - Script run.bat)
+# Ativar ambiente virtual
 venv\Scripts\activate
 
-# 2. Inicie o servidor Daphne
+# Iniciar servidor
 daphne -p 8000 minhasenha.asgi:application
-Após iniciar o servidor, a aplicação estará disponível em http://127.0.0.1:8000/.
-
-📈 Próximos Passos
-[ ] Implementar sistema de cadastro e login para pacientes (com CPF).
-
-[ ] Criar um painel público (modo TV) para exibir as senhas chamadas.
-
-[ ] Desenvolver a funcionalidade de "Finalizar Atendimento" no painel do atendente.
-
-[ ] Criar um dashboard administrativo com relatórios (tempo médio de espera, etc.).
 
 ✒️ Autor
-Pablo Augusto - GitHub
+
+Pablo Augusto
+🔗 GitHub
