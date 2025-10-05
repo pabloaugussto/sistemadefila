@@ -1,0 +1,43 @@
+
+:root {
+    --cor-primaria: #007bff; 
+    --cor-gradiente: linear-gradient(90deg, #0d6efd, #3c82e7); 
+    --cor-fundo: #f8f9fa;
+    --sombra-card: 0 10px 30px rgba(0, 0, 0, 0.07);
+    --fonte-principal: 'Poppins', sans-serif;
+}
+
+body {
+    font-family: var(--fonte-principal);
+    background-color: var(--cor-fundo);
+}
+
+.card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: var(--sombra-card); 
+    background-color: rgba(255, 255, 255, 0.7); 
+    backdrop-filter: blur(10px);
+}
+
+.card-header {
+    background: var(--cor-gradiente); 
+    color: white;
+    font-weight: 600;
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+}
+
+
+.btn-primary {
+    background: var(--cor-gradiente);
+    border: none;
+    padding: 12px 20px;
+    font-weight: 600;
+    transition: all 0.3s ease; 
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px); 
+    box-shadow: 0 8px 15px rgba(0, 123, 255, 0.2);
+}

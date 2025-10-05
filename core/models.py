@@ -1,5 +1,8 @@
+# core/models.py
+
 from django.db import models
 from django.utils import timezone
+from django.contrib.auth.models import User
 
 class Fila(models.Model):
     nome = models.CharField(max_length=100)
@@ -19,11 +22,20 @@ class Senha(models.Model):
     numero_senha = models.PositiveIntegerField()
     data_emissao = models.DateTimeField(default=timezone.now)
     status = models.CharField(max_length=3, choices=STATUS_CHOICES, default='AGU')
+    
+
+    paciente = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
-        # Formata o número da senha com 3 dígitos, ex: 1 -> 001, 15 -> 015
         return f"{self.fila.sigla}{self.numero_senha:03d}"
     
     class Meta:
-        # Garante que o número da senha seja único para cada fila
         unique_together = ('fila', 'numero_senha')
+
+class Paciente(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    cpf = models.CharField(max_length=11, unique=True, verbose_name="CPF")
+
+    def __str__(self):
+        return self.user.get_full_name() or self.user.username
+      
