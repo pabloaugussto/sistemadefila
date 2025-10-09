@@ -1,5 +1,6 @@
 from django.urls import path
 from django.contrib.auth import views as auth_views
+from .forms import CustomAuthenticationForm
 from . import views
 
 urlpatterns = [
@@ -18,4 +19,12 @@ urlpatterns = [
     path('acompanhar/<int:senha_id>/', views.acompanhar_senha, name='acompanhar_senha'),
     path('atendente/', views.painel_atendente, name='painel_atendente'),
     path('chamar/', views.chamar_senha, name='chamar_senha'),
+
+    # URL para a página inicial redirecionar para login
+    path('', auth_views.LoginView.as_view(
+            template_name='core/login.html',
+            authentication_form=CustomAuthenticationForm
+        ), name='login'),
+
+    path('finalizar/<int:senha_id>/', views.finalizar_atendimento, name='finalizar_atendimento'),
 ]

@@ -21,10 +21,9 @@ class Senha(models.Model):
     fila = models.ForeignKey(Fila, on_delete=models.CASCADE)
     numero_senha = models.PositiveIntegerField()
     data_emissao = models.DateTimeField(default=timezone.now)
-    status = models.CharField(max_length=3, choices=STATUS_CHOICES, default='AGU')
-    
-
+    status = models.CharField(max_length=3, choices=STATUS_CHOICES, default='AGU') 
     paciente = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    data_chamada = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.fila.sigla}{self.numero_senha:03d}"
@@ -38,4 +37,16 @@ class Paciente(models.Model):
 
     def __str__(self):
         return self.user.get_full_name() or self.user.username
+    
+class Historico(models.Model):
+    senha = models.OneToOneField(Senha, on_delete=models.CASCADE)
+    atendente = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='atendimentos_realizados')
+    data_inicio_atendimento = models.DateTimeField()
+    data_fim_atendimento = models.DateTimeField(auto_now_add=True)
+
+    def tempo_total_atendimento(self):
+        return self.data_fim_atendimento - self.data_inicio_atendimento
+
+    def __str__(self):
+        return f"Atendimento da Senha {self.senha}"
       
