@@ -19,3 +19,11 @@ class PacienteForm(forms.ModelForm):
     class Meta:
         model = Paciente
         fields = ('cpf',)
+
+# FORMULÁRIO: Para o Atendente registrar as observações
+class ObservacaoAtendimentoForm(forms.Form):
+    observacoes = forms.CharField(
+        widget=forms.Textarea(attrs={'rows': 4, 'class': 'form-control'}),
+        required=False, 
+        label="Observações do Atendimento (Opcional)"
+    )

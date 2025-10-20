@@ -15,6 +15,7 @@ class Senha(models.Model):
     STATUS_CHOICES = [
         ('AGU', 'Aguardando'),
         ('CHA', 'Chamada'),
+        ('ATE', 'Em Atendimento'),
         ('FIN', 'Finalizada'),
     ]
 
@@ -23,8 +24,16 @@ class Senha(models.Model):
     data_emissao = models.DateTimeField(default=timezone.now)
     status = models.CharField(max_length=3, choices=STATUS_CHOICES, default='AGU')
     
-
     paciente = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+
+    # Campos do Atendente
+    atendente = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='senhas_atendidas', verbose_name='Atendente')
+    
+    hora_chamada = models.DateTimeField(null=True, blank=True)
+    hora_inicio_atendimento = models.DateTimeField(null=True, blank=True)
+    hora_fim_atendimento = models.DateTimeField(null=True, blank=True)
+    observacoes = models.TextField(null=True, blank=True)
+    
 
     def __str__(self):
         return f"{self.fila.sigla}{self.numero_senha:03d}"
@@ -38,4 +47,3 @@ class Paciente(models.Model):
 
     def __str__(self):
         return self.user.get_full_name() or self.user.username
-      
