@@ -12,7 +12,8 @@ from .forms import ObservacaoAtendimentoForm
 
 
 # ==========================================================
-# FUNÇÕES DO PACIENTE (EMITIR E ACOMPANHAR)
+# FUNÇÕES DO PACIENTE (EMITIR E ACOMPANHAR) 
+# Mantido o seu bloco de comentários para organização (HEAD)
 # ==========================================================
 
 @login_required
@@ -77,23 +78,23 @@ def painel_atendente(request):
     filas = Fila.objects.all()
     senhas_aguardando = {}
     
-    # Senhas que este atendente está atualmente atendendo
+    # Senhas que este atendente está atualmente atendendo (HEAD)
     senhas_em_atendimento = Senha.objects.filter(status='ATE', atendente=request.user).order_by('hora_inicio_atendimento')
 
     for fila in filas:
-        # Senhas aguardando ou já chamadas
+        # Senhas aguardando ou já chamadas (HEAD - Lógica correta)
         senhas_aguardando[fila.nome] = Senha.objects.filter(fila=fila, status__in=['AGU', 'CHA']).order_by('data_emissao')
 
     contexto = {
         'senhas_aguardando': senhas_aguardando,
-        'senhas_em_atendimento': senhas_em_atendimento 
+        'senhas_em_atendimento': senhas_em_atendimento # Variável correta usada no template
     }
     return render(request, 'core/painel_atendente.html', contexto)
 
 
 @login_required
 def chamar_proxima_senha(request): 
-    """RF15: Chamada de Próxima Senha Automática (Lógica de Prioridade)."""
+    """RF15: Chamada de Próxima Senha Automática (Lógica de Prioridade).""" 
     
     # 1. Tenta buscar a próxima senha prioritária
     fila_prioritaria = Fila.objects.filter(sigla='P').first()
@@ -141,6 +142,7 @@ def iniciar_atendimento(request, senha_id):
 @login_required
 def finalizar_atendimento(request, senha_id):
     """Registra a conclusão, tempo final e observações (RF17)."""
+    # Mantido o seu código completo (HEAD)
     senha = get_object_or_404(Senha, pk=senha_id, atendente=request.user) 
     
     if request.method == 'POST':
@@ -171,7 +173,7 @@ def finalizar_atendimento(request, senha_id):
         'senha': senha,
         'form': form
     }
-    # MUDANÇA ESSENCIAL: TemplateDoesNotExist resolvido ao simplificar o caminho
+    # Caminho do template simplificado para evitar TemplateDoesNotExist
     return render(request, 'finalizar_atendimento.html', contexto) 
     
 # ==========================================================
@@ -204,3 +206,5 @@ def cadastro_paciente(request):
         'paciente_form': paciente_form
     }
     return render(request, 'core/cadastro.html', contexto)
+
+# A função 'finalizar_atendimento' duplicada no final (do commit remoto) foi removida.
