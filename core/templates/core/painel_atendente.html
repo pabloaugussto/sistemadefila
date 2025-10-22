@@ -11,7 +11,10 @@
     <nav class="navbar navbar-dark bg-dark">
         <div class="container-fluid">
             <span class="navbar-brand mb-0 h1">Painel do Atendente - SenhaFácil</span>
-            <a href="{% url 'logout' %}" class="btn btn-outline-light">Sair</a>
+            <form action="{% url 'logout' %}" method="post" class="d-inline">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-outline-light">Sair</button>
+</form>
         </div>
     </nav>
 

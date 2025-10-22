@@ -1,13 +1,15 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Max
-from .models import Fila, Senha, Paciente 
+from .models import Fila, Senha, Paciente, Historico 
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
-
-
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import login
 from .forms import UserForm, PacienteForm
+from django.utils import timezone
+
+def is_staff(user):
+    return user.is_staff
 
 
 @login_required
@@ -52,7 +54,7 @@ def acompanhar_senha(request, senha_id):
     return render(request, 'core/acompanhar_senha.html', contexto)
 
 
-@login_required
+@user_passes_test(is_staff)
 def painel_atendente(request):
     filas = Fila.objects.all()
     senhas_aguardando = {}
@@ -67,7 +69,7 @@ def painel_atendente(request):
     return render(request, 'core/painel_atendente.html', contexto)
 
 
-@login_required
+@user_passes_test(is_staff)
 def chamar_senha(request):
     fila_prioritaria = Fila.objects.filter(sigla='P').first()
     proxima_senha = Senha.objects.filter(fila=fila_prioritaria, status='AGU').order_by('data_emissao').first()
@@ -77,6 +79,7 @@ def chamar_senha(request):
 
     if proxima_senha:
         proxima_senha.status = 'CHA'
+        proxima_senha.data_chamada = timezone.now()
         proxima_senha.save()
 
         channel_layer = get_channel_layer()
@@ -89,7 +92,6 @@ def chamar_senha(request):
         )
 
     return redirect('painel_atendente')
-
 
 
 def cadastro_paciente(request):
@@ -117,11 +119,17 @@ def cadastro_paciente(request):
     }
     return render(request, 'core/cadastro.html', contexto)
 
-@login_required
+@user_passes_test(is_staff)
 def finalizar_atendimento(request, senha_id):
     if request.method == 'POST':
         senha_a_finalizar = get_object_or_404(Senha, pk=senha_id)
-        # Muda o status para "Finalizada"
+        if senha_a_finalizar.data_chamada:
+            Historico.objects.create(
+                senha=senha_a_finalizar,
+                atendente=request.user,
+                data_inicio_atendimento=senha_a_finalizar.data_chamada
+            )
         senha_a_finalizar.status = 'FIN'
         senha_a_finalizar.save()
+
     return redirect('painel_atendente')
