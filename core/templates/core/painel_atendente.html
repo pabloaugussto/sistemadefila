@@ -1,63 +1,55 @@
-<<<<<<< HEAD
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Painel do Atendente</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
-</head>
-<body>
-    <nav class="navbar navbar-dark bg-dark">
-        <div class="container-fluid">
-            <span class="navbar-brand mb-0 h1">Painel do Atendente - SenhaFácil</span>
-            <form action="{% url 'logout' %}" method="post" class="d-inline">
-    {% csrf_token %}
-    <button type="submit" class="btn btn-outline-light">Sair</button>
-</form>
-        </div>
-    </nav>
-=======
 {% extends "core/base.html" %}
+
 {% block title %}Painel do Atendente{% endblock %}
->>>>>>> be863e8c4f1f833cf0bee48c5db8a40149ceb09e
 
 {% block content %}
 <div class="container mt-5">
-    <div class="row">
-        <div class="col-md-12">
+    <div class="row mb-3">
+        <div class="col-md-9">
             <h2 class="mb-4">Painel de Atendimento</h2>
             <p class="text-muted">Usuário logado: **{{ user.get_full_name|default:user.username }}**</p>
+        </div>
+        <div class="col-md-3 text-end align-self-center">
+            {# Botão Sair como formulário POST #}
+            <form action="{% url 'logout' %}" method="post" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-danger">
+                    <i class="bi bi-box-arrow-right"></i> Sair
+                </button>
+            </form>
         </div>
     </div>
 
     <div class="row mb-5">
         <div class="col-md-12">
             <h3 class="mb-3">Ações de Filas</h3>
-            <form action="{% url 'chamar' %}" method="post"> {% csrf_token %}
+            {# Formulário para chamar a próxima senha - URL corrigida #}
+            <form action="{% url 'chamar_senha' %}" method="post">
+                {% csrf_token %}
                 <button type="submit" class="btn btn-success btn-lg w-100">
-                    Chamar Próxima Senha
+                    <i class="bi bi-megaphone-fill"></i> Chamar Próxima Senha (Prioritária/Normal)
                 </button>
             </form>
         </div>
     </div>
 
+    {# Seção para senhas que ESTE atendente está atendendo (status ATE) #}
     {% if senhas_em_atendimento %}
     <hr>
-    <h3 class="mb-3 text-warning">Minhas Senhas em Atendimento</h3>
+    <h3 class="mb-3 text-primary"><i class="bi bi-person-check-fill"></i> Minhas Senhas em Atendimento</h3>
     <div class="row">
         {% for senha in senhas_em_atendimento %}
         <div class="col-md-6 mb-3">
-            <div class="card bg-warning text-dark">
+            <div class="card border-primary">
                 <div class="card-body">
                     <h5 class="card-title">{{ senha.fila.sigla }}{{ senha.numero_senha }}</h5>
                     <p class="card-text">
                         Paciente: {{ senha.paciente.get_full_name|default:senha.paciente.username }}<br>
-                        Início: {{ senha.hora_inicio_atendimento|date:"H:i:s" }}
+                        Chamada às: {{ senha.data_chamada|date:"H:i:s" }} {# Usando data_chamada #}
                     </p>
-                    <a href="{% url 'finalizar_atendimento' senha.id %}" class="btn btn-danger btn-sm">
-                        Finalizar Atendimento
+                    {# Link/Botão para ir para a tela de finalização (que mostra o form de observações) #}
+                    <a href="{% url 'finalizar_atendimento' senha.id %}" class="btn btn-primary btn-sm">
+                        <i class="bi bi-check-circle-fill"></i> Finalizar Atendimento
                     </a>
                 </div>
             </div>
@@ -66,41 +58,55 @@
     </div>
     {% endif %}
 
-
-    <hr>
-    <h3 class="mb-3">Senhas na Fila</h3>
+    <hr class="my-4">
+    <h3 class="mb-3"><i class="bi bi-people-fill"></i> Senhas na Fila (Aguardando/Chamadas)</h3>
 
     {% for fila_nome, senhas in senhas_aguardando.items %}
-        {% if senhas %}
-            <div class="card mb-4">
-                <div class="card-header bg-primary text-white">
-                    Fila: **{{ fila_nome }}**
-                </div>
-                <ul class="list-group list-group-flush">
-                    {% for senha in senhas %}
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <div>
-                                <span class="badge bg-secondary me-3">{{ senha.fila.sigla }}{{ senha.numero_senha }}</span>
-                                Paciente: {{ senha.paciente.get_full_name|default:senha.paciente.username }}
-                                {% if senha.status == 'CHA' %}
-                                    <span class="badge bg-warning ms-3">CHAMADA</span>
-                                {% endif %}
-                            </div>
-                            {% if senha.status == 'AGU' or senha.status == 'CHA' %}
-                                <form action="{% url 'iniciar_atendimento' senha.id %}" method="post" class="ms-auto">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-sm btn-success">
-                                        Iniciar Atendimento
-                                    </button>
-                                </form>
-                            {% endif %}
-                        </li>
-                    {% endfor %}
-                </ul>
+        <div class="card mb-4">
+            <div class="card-header">
+                Fila: <strong>{{ fila_nome }}</strong> ({{ senhas|length }})
             </div>
-        {% else %}
-            <p class="text-muted">Nenhuma senha aguardando na fila **{{ fila_nome }}**.</p>
-        {% endif %}
+            {% if senhas %}
+            <ul class="list-group list-group-flush">
+                {% for senha in senhas %}
+                    {% comment %} Cor de fundo baseada na prioridade {% endcomment %}
+                    {% if senha.fila.sigla == 'P' %}
+                    <li class="list-group-item list-group-item-danger d-flex justify-content-between align-items-center">
+                    {% else %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                    {% endif %}
+                        <div>
+                            <span class="badge bg-secondary me-2">{{ senha.fila.sigla }}{{ senha.numero_senha }}</span>
+                            Paciente: {{ senha.paciente.get_full_name|default:senha.paciente.username }}
+                            {% if senha.fila.sigla == 'P' %}
+                                <span class="badge bg-danger rounded-pill ms-2">Prioritário</span>
+                            {% endif %}
+                            {% if senha.status == 'CHA' %}
+                                <span class="badge bg-warning text-dark ms-2">CHAMADA por {{ senha.atendente.username }}</span>
+                            {% endif %}
+                        </div>
+                        {# Botão para Iniciar Atendimento (muda status para ATE) #}
+                        {% if senha.status == 'CHA' and senha.atendente == user %}
+                        <form action="{% url 'iniciar_atendimento' senha.id %}" method="post" class="ms-auto">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-info text-white">
+                                <i class="bi bi-play-circle-fill"></i> Iniciar Meu Atendimento
+                            </button>
+                        </form>
+                        {% elif senha.status == 'AGU' %}
+                         <span class="text-muted fst-italic">Aguardando chamada...</span>
+                        {% elif senha.status == 'CHA' and senha.atendente != user %}
+                         <span class="text-warning fst-italic">Chamada por outro atendente</span>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="card-body">
+                <p class="text-muted mb-0">Nenhuma senha nesta fila.</p>
+            </div>
+            {% endif %}
+        </div>
     {% endfor %}
 
 </div>
