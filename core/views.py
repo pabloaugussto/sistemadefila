@@ -71,13 +71,14 @@ def acompanhar_senha(request, senha_id):
 # FUNÇÕES DO ATENDENTE
 # ==========================================================
 
-@user_passes_test(is_staff) # Decorator da sua versão (mais seguro)
+
+@user_passes_test(is_staff)
 def painel_atendente(request):
     filas = Fila.objects.all()
     senhas_aguardando = {}
-    
-    # Lógica da versão da colega (com status 'ATE')
-    senhas_em_atendimento = Senha.objects.filter(status='ATE', atendente=request.user).order_by('data_chamada') # Assumindo data_chamada como início
+
+    # CORREÇÃO AQUI: Usar 'hora_chamada' para ordenar
+    senhas_em_atendimento = Senha.objects.filter(status='ATE', atendente=request.user).order_by('hora_chamada')
 
     for fila in filas:
         senhas_aguardando[fila.nome] = Senha.objects.filter(fila=fila, status__in=['AGU', 'CHA']).order_by('data_emissao')
@@ -135,35 +136,47 @@ def iniciar_atendimento(request, senha_id):
         
     return redirect('painel_atendente')
 
-@user_passes_test(is_staff) # Decorator da sua versão
+@user_passes_test(is_staff)
 def finalizar_atendimento(request, senha_id):
-    """Registra a conclusão, tempo final, observações e cria histórico (RF17)."""
-    # Lógica de busca da versão da colega
-    senha = get_object_or_404(Senha, pk=senha_id, atendente=request.user)
-    
+    """Muda status para 'Finalizada' ('FIN'), salva observações e cria Histórico."""
+    # Garante que só finalize o que está atendendo (status='ATE') e pertence ao atendente
+    senha = get_object_or_404(Senha, pk=senha_id, atendente=request.user, status='ATE') 
+
+    # Verifica se o form de observação existe
+    form_class = ObservacaoAtendimentoForm if 'ObservacaoAtendimentoForm' in globals() and ObservacaoAtendimentoForm else None
+
     if request.method == 'POST':
-        form = ObservacaoAtendimentoForm(request.POST)
+        # Processa o formulário apenas se ele existir
+        form = form_class(request.POST) if form_class else None 
         
-        if form.is_valid():
-            senha.observacoes = form.cleaned_data['observacoes'] # Campo novo da colega
-            # Precisamos de um campo hora_fim_atendimento no models.Senha
-            # Vamos usar timezone.now() por enquanto
+        # Validação do formulário (se ele existir)
+        is_form_valid = form.is_valid() if form else True # Se não há form, considera válido
+
+        if is_form_valid:
+            # Salva observações se o campo e o form existirem
+            if form and hasattr(senha, 'observacoes'):
+                 senha.observacoes = form.cleaned_data['observacoes']
+
             hora_fim = timezone.now()
-            # senha.hora_fim_atendimento = hora_fim # Idealmente seria um campo novo
+            # Salva hora_fim se o campo existir
+            if hasattr(senha, 'hora_fim_atendimento'):
+                 senha.hora_fim_atendimento = hora_fim
+
             senha.status = 'FIN'
             senha.save()
-            
-            # --- Criação do Histórico (Lógica da sua versão, adaptada) ---
-            if senha.data_chamada: # Usando o campo que você criou
+
+            # --- Criação do Histórico (CORRIGIDO) ---
+            # Verifica se hora_chamada existe antes de criar o histórico
+            if senha.hora_chamada: # <-- USA hora_chamada
                  Historico.objects.create(
                      senha=senha,
                      atendente=request.user,
-                     data_inicio_atendimento=senha.data_chamada,
-                     # O modelo Historico já salva data_fim_atendimento automaticamente
+                     # Usa hora_chamada como início
+                     data_inicio_atendimento=senha.hora_chamada, # <-- USA hora_chamada
                  )
             # --- Fim Histórico ---
 
-            # Notificação em tempo real (Versão da colega)
+            # Notificação em tempo real
             channel_layer = get_channel_layer()
             async_to_sync(channel_layer.group_send)(
                 'fila_geral',
@@ -173,20 +186,23 @@ def finalizar_atendimento(request, senha_id):
                 }
             )
 
-            # Redireciona de volta ao painel (Lógica da sua versão)
+            # Redireciona de volta ao painel
             return redirect('painel_atendente')
             
-    else:
-        # Lógica GET da versão da colega
-        form = ObservacaoAtendimentoForm(initial={'observacoes': getattr(senha, 'observacoes', '')}) # Usando getattr para segurança
+    # Lógica para GET (exibir o form, se existir)
+    else: 
+        if form_class:
+            initial_obs = getattr(senha, 'observacoes', '') 
+            form = form_class(initial={'observacoes': initial_obs})
+        else:
+            form = None 
 
     contexto = {
         'senha': senha,
         'form': form
     }
-    # Mantendo a renderização do template da colega para o GET
-    return render(request, 'core/finalizar_atendimento.html', contexto) # Assumindo que o template existe
-
+    # Renderiza o template de finalização (assumindo que existe)
+    return render(request, 'core/finalizar_atendimento.html', contexto)
 # ==========================================================
 # FUNÇÕES DE AUTENTICAÇÃO
 # ==========================================================
