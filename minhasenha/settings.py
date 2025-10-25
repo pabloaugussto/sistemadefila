@@ -142,7 +142,8 @@ CHANNEL_LAYERS = {
     }
 }
 
-LOGIN_URL = 'login'
+
+LOGIN_URL = 'atendente_login' 
 LOGIN_REDIRECT_URL = 'selecionar_fila' 
 LOGOUT_REDIRECT_URL = 'login' 
 

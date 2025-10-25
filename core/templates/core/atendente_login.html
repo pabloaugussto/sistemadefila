@@ -1,5 +1,7 @@
 {% extends 'core/base.html' %}
-{% load crispy_forms_tags %}  {% block title %}Login - SenhaFácil{% endblock %}
+{% load crispy_forms_tags %}
+
+{% block title %}Login Atendente - SenhaFácil{% endblock %}
 
 {% block content %}
 <div class="container">
@@ -7,18 +9,18 @@
         <div class="col-md-5">
             <div class="card">
                 <div class="card-header text-center">
-                    <h3><i class="bi bi-box-arrow-in-right"></i> Acessar o Sistema</h3>
+                    <h3><i class="bi bi-person-workspace"></i> Acesso Restrito - Atendentes</h3>
                 </div>
                 <div class="card-body">
                     <form method="post">
                         {% csrf_token %}
-                        {{ form|crispy }}  <div class="d-grid mt-3">
+                        {{ form|crispy }} {# Renderiza o form padrão (Username/Password) #}
+                        <div class="d-grid mt-3">
                             <button type="submit" class="btn btn-primary">Entrar</button>
                         </div>
                     </form>
                     <hr>
-                    <p class="text-center">Não tem uma conta? <a href="{% url 'cadastro' %}">Cadastre-se</a>.</p>
-                    <p class="text-center mt-2">É um atendente? <a href="{% url 'atendente_login' %}">Acesse por aqui</a>.</p>
+                    <p class="text-center">É um paciente? <a href="{% url 'login' %}">Acesse aqui</a>.</p>
                 </div>
             </div>
         </div>

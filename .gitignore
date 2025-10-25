@@ -1,0 +1,26 @@
+# Created by venv; see https://docs.python.org/3/library/venv.html
+
+# Ambiente Virtual
+venv/
+
+# Arquivos de Cache do Python
+__pycache__/
+*.pyc
+*.py[cod]
+*$py.class
+
+# Arquivos de configuração de IDEs
+.vscode/
+.idea/
+
+
+# Arquivo de variáveis de ambiente (para senhas e segredos)
+.env
+
+# Arquivos de mídia e estáticos (se aplicável no futuro)
+/media/
+/static_root/
+
+# Arquivos de log
+*.log
+
