@@ -17,6 +17,7 @@ urlpatterns = [
             template_name='core/atendente_login.html' # NOVO template
             # Sem authentication_form, usa o padrão (pede Username)
         ), name='atendente_login'), # NOVO nome para esta URL
+        path('redirect/', views.redirect_apos_login, name='redirect_apos_login'),
 
     # --- OUTRAS URLS ---
     path('cadastro/', views.cadastro_paciente, name='cadastro'),

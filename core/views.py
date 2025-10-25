@@ -71,6 +71,15 @@ def acompanhar_senha(request, senha_id):
 # FUNÇÕES DO ATENDENTE
 # ==========================================================
 
+@login_required # Garante que só usuários logados acessem
+def redirect_apos_login(request):
+    if request.user.is_staff:
+        # Se for atendente/admin, vai para o painel
+        return redirect('painel_atendente')
+    else:
+        # Se for paciente, vai para a seleção de filas
+        return redirect('selecionar_fila')
+
 
 @user_passes_test(is_staff)
 def painel_atendente(request):

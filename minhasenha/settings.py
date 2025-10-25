@@ -144,7 +144,7 @@ CHANNEL_LAYERS = {
 
 
 LOGIN_URL = 'atendente_login' 
-LOGIN_REDIRECT_URL = 'selecionar_fila' 
+LOGIN_REDIRECT_URL = 'redirect_apos_login' 
 LOGOUT_REDIRECT_URL = 'login' 
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
