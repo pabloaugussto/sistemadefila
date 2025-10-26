@@ -7,6 +7,8 @@ from asgiref.sync import async_to_sync
 from django.contrib.auth.decorators import login_required, user_passes_test # Importamos ambos
 from django.contrib.auth import login
 from .forms import UserForm, PacienteForm, ObservacaoAtendimentoForm # Importamos todos os forms
+from django.db.models import Count, Avg, F # Para calcular estatísticas
+from datetime import date # Para filtrar por data
 
 # Função helper para checar se é staff (Mantida da sua versão)
 def is_staff(user):
@@ -215,6 +217,36 @@ def finalizar_atendimento(request, senha_id):
 # ==========================================================
 # FUNÇÕES DE AUTENTICAÇÃO
 # ==========================================================
+
+@user_passes_test(is_staff) # Protege a view para staff
+def painel_relatorios(request):
+    hoje = date.today()
+
+    # Busca todos os atendimentos finalizados hoje
+    atendimentos_hoje = Historico.objects.filter(data_fim_atendimento__date=hoje)
+
+    # Calcula estatísticas básicas
+    total_atendimentos_hoje = atendimentos_hoje.count()
+
+    # Calcula o tempo médio de atendimento (em segundos)
+    # Usamos F() para referenciar campos do modelo na expressão
+    # O resultado é um objeto timedelta, pegamos total_seconds()
+    tempo_medio_segundos = atendimentos_hoje.aggregate(
+        tempo_medio=Avg(F('data_fim_atendimento') - F('data_inicio_atendimento'))
+    )['tempo_medio']
+
+    # Converte o timedelta para minutos para exibição (se houver atendimentos)
+    tempo_medio_minutos = round(tempo_medio_segundos.total_seconds() / 60, 1) if tempo_medio_segundos else 0
+
+    # Prepara o contexto para enviar ao template
+    contexto = {
+        'data_hoje': hoje,
+        'total_atendimentos_hoje': total_atendimentos_hoje,
+        'tempo_medio_minutos': tempo_medio_minutos,
+    }
+
+    # Renderiza o template (que criaremos no próximo passo)
+    return render(request, 'core/relatorios.html', contexto)
 
 def cadastro_paciente(request):
     # (Conteúdo idêntico, mantido)
