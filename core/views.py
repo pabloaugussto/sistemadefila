@@ -100,10 +100,10 @@ def painel_atendente(request):
     }
     return render(request, 'core/painel_atendente.html', contexto)
 
-@user_passes_test(is_staff) # Decorator da sua versão
-def chamar_proxima_senha(request): # Nome e docstring da versão da colega
-    """RF15: Chamada de Próxima Senha Automática (Lógica de Prioridade)."""
-    
+@user_passes_test(is_staff)
+def chamar_proxima_senha(request):
+    """Chama a próxima senha (prioritária primeiro) e muda status para 'CHA'."""
+
     fila_prioritaria = Fila.objects.filter(sigla='P').first()
     proxima_senha = None
     if fila_prioritaria:
@@ -114,12 +114,13 @@ def chamar_proxima_senha(request): # Nome e docstring da versão da colega
 
     if proxima_senha:
         proxima_senha.status = 'CHA'
-        # Lógica da versão da colega
         proxima_senha.atendente = request.user
-        proxima_senha.data_chamada = timezone.now() # Usando o nome do seu campo, mas com a lógica dela
-        proxima_senha.save()
+        # --- VERIFIQUE ESTAS DUAS LINHAS COM MUITA ATENÇÃO ---
+        proxima_senha.hora_chamada = timezone.now() # Define a hora atual
+        proxima_senha.save()                       # Salva a alteração no banco
+        # ---------------------------------------------------
 
-        # Notificação em tempo real (Versão da colega)
+        # Notificação em tempo real
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.group_send)(
             'fila_geral',
@@ -130,6 +131,7 @@ def chamar_proxima_senha(request): # Nome e docstring da versão da colega
         )
 
     return redirect('painel_atendente')
+
 
 @user_passes_test(is_staff) # Adicionado decorator seguro
 def iniciar_atendimento(request, senha_id):

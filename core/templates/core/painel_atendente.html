@@ -45,7 +45,7 @@
                     <h5 class="card-title">{{ senha.fila.sigla }}{{ senha.numero_senha }}</h5>
                     <p class="card-text">
                         Paciente: {{ senha.paciente.get_full_name|default:senha.paciente.username }}<br>
-                        Chamada às: {{ senha.data_chamada|date:"H:i:s" }} {# Usando data_chamada #}
+                        Chamada às: {{ senha.hora_chamada|date:"H:i:s" }}
                     </p>
                     {# Link/Botão para ir para a tela de finalização (que mostra o form de observações) #}
                     <a href="{% url 'finalizar_atendimento' senha.id %}" class="btn btn-primary btn-sm">

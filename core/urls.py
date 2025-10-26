@@ -18,6 +18,7 @@ urlpatterns = [
             # Sem authentication_form, usa o padrão (pede Username)
         ), name='atendente_login'), # NOVO nome para esta URL
         path('redirect/', views.redirect_apos_login, name='redirect_apos_login'),
+    path('relatorios/', views.painel_relatorios, name='painel_relatorios'),
 
     # --- OUTRAS URLS ---
     path('cadastro/', views.cadastro_paciente, name='cadastro'),

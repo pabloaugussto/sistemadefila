@@ -1,0 +1,56 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Painel de Relatórios{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row mb-4">
+        <div class="col-md-9">
+            <h2 class="mb-4"><i class="bi bi-graph-up"></i> Painel de Relatórios</h2>
+            <p class="text-muted">Estatísticas do dia: {{ data_hoje|date:"d/m/Y" }}</p>
+        </div>
+        <div class="col-md-3 text-end align-self-center">
+            {# Botão Sair (igual ao do painel do atendente) #}
+            <form action="{% url 'logout' %}" method="post" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-danger">
+                    <i class="bi bi-box-arrow-right"></i> Sair
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="row">
+        {# Card Total de Atendimentos #}
+        <div class="col-md-6 mb-4">
+            <div class="card text-center">
+                <div class="card-header">
+                    Total de Atendimentos Hoje
+                </div>
+                <div class="card-body">
+                    <h1 class="display-4">{{ total_atendimentos_hoje }}</h1>
+                </div>
+            </div>
+        </div>
+
+        {# Card Tempo Médio de Atendimento #}
+        <div class="col-md-6 mb-4">
+            <div class="card text-center">
+                <div class="card-header">
+                    Tempo Médio de Atendimento Hoje
+                </div>
+                <div class="card-body">
+                    <h1 class="display-4">{{ tempo_medio_minutos|floatformat:1 }}</h1>
+                    <p class="card-text text-muted">(minutos)</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# Área para futuros relatórios mais detalhados #}
+    <hr class="my-4">
+    <h3 class="mb-3">Detalhes (Futuro)</h3>
+    <p class="text-muted">Em breve: Relatórios por fila, período, etc.</p>
+
+</div>
+{% endblock %}
