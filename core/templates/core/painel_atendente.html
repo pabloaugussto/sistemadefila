@@ -3,27 +3,34 @@
 {% block title %}Painel do Atendente{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="row mb-3">
-        <div class="col-md-9">
-            <h2 class="mb-4">Painel de Atendimento</h2>
-            <p class="text-muted">Usuário logado: **{{ user.get_full_name|default:user.username }}**</p>
-        </div>
-        <div class="col-md-3 text-end align-self-center">
-            {# Botão Sair como formulário POST #}
+{# --- BARRA DE NAVEGAÇÃO ADICIONADA AQUI --- #}
+<nav class="navbar navbar-dark bg-dark mb-4">
+    <div class="container-fluid">
+        <span class="navbar-brand mb-0 h1">
+            <i class="bi bi-person-workspace"></i> Painel do Atendente - SenhaFácil
+        </span>
+        <div>
+            <a href="{% url 'painel_relatorios' %}" class="btn btn-outline-info me-2">
+                <i class="bi bi-graph-up"></i> Relatórios
+            </a>
             <form action="{% url 'logout' %}" method="post" class="d-inline">
                 {% csrf_token %}
-                <button type="submit" class="btn btn-outline-danger">
-                    <i class="bi bi-box-arrow-right"></i> Sair
+                <button type="submit" class="btn btn-outline-light">
+                     <i class="bi bi-box-arrow-right"></i> Sair
                 </button>
             </form>
         </div>
     </div>
+</nav>
+{# --- FIM DA BARRA DE NAVEGAÇÃO --- #}
+
+<div class="container mt-5">
+    {# Removido o título H2 antigo, pois agora está na navbar #}
+    <p class="text-muted mb-4">Usuário logado: **{{ user.get_full_name|default:user.username }}**</p>
 
     <div class="row mb-5">
         <div class="col-md-12">
             <h3 class="mb-3">Ações de Filas</h3>
-            {# Formulário para chamar a próxima senha - URL corrigida #}
             <form action="{% url 'chamar_senha' %}" method="post">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-success btn-lg w-100">
@@ -47,7 +54,6 @@
                         Paciente: {{ senha.paciente.get_full_name|default:senha.paciente.username }}<br>
                         Chamada às: {{ senha.hora_chamada|date:"H:i:s" }}
                     </p>
-                    {# Link/Botão para ir para a tela de finalização (que mostra o form de observações) #}
                     <a href="{% url 'finalizar_atendimento' senha.id %}" class="btn btn-primary btn-sm">
                         <i class="bi bi-check-circle-fill"></i> Finalizar Atendimento
                     </a>
@@ -69,7 +75,6 @@
             {% if senhas %}
             <ul class="list-group list-group-flush">
                 {% for senha in senhas %}
-                    {% comment %} Cor de fundo baseada na prioridade {% endcomment %}
                     {% if senha.fila.sigla == 'P' %}
                     <li class="list-group-item list-group-item-danger d-flex justify-content-between align-items-center">
                     {% else %}
@@ -85,7 +90,6 @@
                                 <span class="badge bg-warning text-dark ms-2">CHAMADA por {{ senha.atendente.username }}</span>
                             {% endif %}
                         </div>
-                        {# Botão para Iniciar Atendimento (muda status para ATE) #}
                         {% if senha.status == 'CHA' and senha.atendente == user %}
                         <form action="{% url 'iniciar_atendimento' senha.id %}" method="post" class="ms-auto">
                             {% csrf_token %}
