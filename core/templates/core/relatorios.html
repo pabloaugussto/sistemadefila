@@ -10,13 +10,9 @@
             <p class="text-muted">Estatísticas do dia: {{ data_hoje|date:"d/m/Y" }}</p>
         </div>
         <div class="col-md-3 text-end align-self-center">
-            {# --- BOTÃO/LINK PARA VOLTAR ADICIONADO AQUI --- #}
             <a href="{% url 'painel_atendente' %}" class="btn btn-outline-secondary me-2">
                 <i class="bi bi-arrow-left-circle"></i> Voltar ao Painel
             </a>
-            {# --- FIM DO BOTÃO --- #}
-
-            {# Botão Sair #}
             <form action="{% url 'logout' %}" method="post" class="d-inline">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-outline-danger">
@@ -26,8 +22,8 @@
         </div>
     </div>
 
+    {# Cards de Estatísticas Gerais #}
     <div class="row">
-        {# Card Total de Atendimentos #}
         <div class="col-md-6 mb-4">
             <div class="card text-center">
                 <div class="card-header">
@@ -38,8 +34,6 @@
                 </div>
             </div>
         </div>
-
-        {# Card Tempo Médio de Atendimento #}
         <div class="col-md-6 mb-4">
             <div class="card text-center">
                 <div class="card-header">
@@ -53,10 +47,30 @@
         </div>
     </div>
 
-    {# Área para futuros relatórios mais detalhados #}
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <h3 class="mb-3">Atendimentos Hoje por Fila</h3>
+            <div class="card">
+                <ul class="list-group list-group-flush">
+                    {% for item in relatorio_filas %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            {{ item.nome }}
+                            <span class="badge bg-primary rounded-pill">{{ item.total }}</span>
+                        </li>
+                    {% empty %}
+                        <li class="list-group-item text-muted">Nenhum atendimento finalizado hoje.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
     <hr class="my-4">
     <h3 class="mb-3">Detalhes (Futuro)</h3>
     <p class="text-muted">Em breve: Relatórios por fila, período, etc.</p>
 
 </div>
+{% endblock %}
+
+{% block scripts %}
+{# Bloco de scripts agora está vazio #}
 {% endblock %}
