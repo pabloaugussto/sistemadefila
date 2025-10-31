@@ -1,0 +1,81 @@
+/* -------------------------------------- */
+/* 1. Reset e Estilos de Fundo para Centralização Total */
+/* -------------------------------------- */
+
+/* O 'bg-light' no <body> do base.html já define a cor. 
+   Ajustamos apenas para garantir que o corpo ocupe 100% da altura da tela. */
+body {
+    /* Define o Flexbox para centralizar o conteúdo principal (o container) */
+    display: flex;
+    justify-content: center; /* Centraliza Horizontalmente */
+    align-items: center; /* Centraliza Verticalmente */
+    min-height: 100vh; /* Garante que o corpo tenha altura mínima da tela */
+    margin: 0;
+    padding: 20px; /* Adiciona um padding para telas pequenas */
+    box-sizing: border-box;
+}
+
+/* -------------------------------------- */
+/* 2. Estilos do Cartão (Card) */
+/* -------------------------------------- */
+
+.card {
+    /* O Bootstrap já define a borda. Aqui adicionamos uma sombra moderna */
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    border: none; /* Remove a borda padrão do Bootstrap para um look mais limpo */
+    border-radius: 12px;
+}
+
+.card-header {
+    background-color: #f8f9fa; /* Um cinza muito claro para o cabeçalho */
+    border-bottom: 1px solid #dee2e6;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+    padding: 20px;
+}
+
+.card-header h3 {
+    color: #495057; /* Cor do título */
+    font-weight: 600;
+    margin: 0;
+}
+
+/* -------------------------------------- */
+/* 3. Estilos do Formulário e Campos */
+/* -------------------------------------- */
+
+/* Estiliza os botões do Crispy Forms dentro do card */
+.card-body .form-group .form-control {
+    border-radius: 6px;
+    padding: 10px 15px;
+    transition: border-color 0.3s;
+}
+
+/* Efeito de foco nos campos */
+.card-body .form-group .form-control:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.25rem rgba(0, 123, 255, 0.25);
+}
+
+/* Estilo para o botão principal */
+.btn-primary {
+    /* Use cores mais vibrantes se quiser, mas mantemos o padrão Bootstrap aqui */
+    padding: 12px;
+    font-size: 1.1em;
+    font-weight: 600;
+    border-radius: 6px;
+}
+
+/* -------------------------------------- */
+/* 4. Ajustes do Container no Bloco de Cadastro */
+/* -------------------------------------- */
+
+/* Limita a largura máxima do container em telas muito grandes para não esticar demais */
+.container {
+    max-width: 1000px;
+}
+
+/* Garante que o container se ajuste à centralização do body em telas grandes */
+.row {
+    width: 100%;
+}
