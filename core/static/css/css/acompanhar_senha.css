@@ -1,0 +1,94 @@
+/* === Estilos principais para a tela Acompanhar Senha === */
+
+body {
+    background: linear-gradient(135deg, #0d6efd 30%, #004aad 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: "Poppins", sans-serif;
+}
+
+#card-principal {
+    border-radius: 20px;
+    overflow: hidden;
+    transition: all 0.3s ease-in-out;
+}
+
+#card-principal:hover {
+    transform: scale(1.01);
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+}
+
+.card-header {
+    background: #0d6efd !important;
+    border-bottom: none;
+    font-weight: 600;
+}
+
+.card-header h2 {
+    font-size: 1.8rem;
+    margin: 0;
+}
+
+.card-body {
+    background-color: #fff;
+    padding: 2rem 2.5rem;
+}
+
+#status-senha-individual {
+    font-size: 2.5rem;
+    color: #0d6efd;
+    text-transform: uppercase;
+}
+
+#posicao-na-fila {
+    color: #ff9800;
+}
+
+#senha-chamada {
+    color: #28a745;
+    transition: all 0.3s ease;
+}
+
+/* Cores de borda para cada status */
+.border-danger {
+    border: 3px solid #dc3545 !important;
+}
+
+.border-success {
+    border: 3px solid #28a745 !important;
+}
+
+.border-warning {
+    border: 3px solid #ffc107 !important;
+}
+
+.border-secondary {
+    border: 3px solid #6c757d !important;
+}
+
+#card-footer-status {
+    background-color: #f8f9fa;
+    font-style: italic;
+    font-size: 0.95rem;
+    color: #555;
+    border-top: 1px solid #ddd;
+    padding: 1rem;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    #card-principal {
+        margin: 1rem;
+    }
+
+    .card-body {
+        padding: 1.5rem;
+    }
+
+    #status-senha-individual,
+    #posicao-na-fila {
+        font-size: 2rem;
+    }
+}

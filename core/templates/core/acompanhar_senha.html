@@ -1,99 +1,42 @@
 {% extends 'core/base.html' %}
+{% load static %} 
 
 {% block title %}Acompanhar Senha - SenhaFácil{% endblock %}
 
+{% block head_extras %}
+        <meta http-equiv="refresh" content="15">
+{% endblock %}
+
 {% block content %}
 <div class="container text-center mt-5">
-    <div class="row">
-        <div class="col-md-6 offset-md-3">
-            <div class="card shadow-lg" id="card-principal">
-                <div class="card-header text-center bg-primary text-white">
-                    <h2><i class="bi bi-ticket-perforated"></i> Sua Senha: {{ senha }}</h2>
-                </div>
-                <div class="card-body">
-                    
-                    <p class="fs-5 mb-1">Status Atual:</p>
-                    <h1 class="display-3 fw-bold mb-4" id="status-senha-individual">
-                        {% if senha.status == 'AGU' %}AGUARDANDO{% elif senha.status == 'CHA' %}CHAMADA{% elif senha.status == 'ATE' %}EM ATENDIMENTO{% elif senha.status == 'FIN' %}FINALIZADA{% endif %}
-                    </h1>
+    <div class="row">
+        <div class="col-md-6 offset-md-3">
+            <div class="card shadow-lg" id="card-principal">
+                <div class="card-header text-center bg-primary text-white">
+                    <h2><i class="bi bi-ticket-perforated"></i> Sua Senha: {{ senha }}</h2>
+                </div>
+                <div class="card-body">
+                    
+                    <p class="fs-5 mb-1">Status Atual:</p>
+                    <h1 class="display-3 fw-bold mb-4" id="status-senha-individual">
+                        {% if senha.status == 'AGU' %}AGUARDANDO{% elif senha.status == 'CHA' %}CHAMADA{% elif senha.status == 'ATE' %}EM ATENDIMENTO{% elif senha.status == 'FIN' %}FINALIZADA{% endif %}
+                    </h1>
 
-                    <p class="fs-5">Sua posição na fila:</p>
-                    <h1 class="display-3 fw-bold mb-4" id="posicao-na-fila">{{ posicao }}º</h1>
-                    
-                    <hr />
+                    <p class="fs-5">Sua posição na fila:</p>
+                    <h1 class="display-3 fw-bold mb-4" id="posicao-na-fila">{{ posicao }}º</h1>
+                    
+                    <hr />
 
                     <p class="fs-5 mt-4">Última senha chamada no painel:</p>
-                    <h2 class="display-5 text-success fw-bold" id="senha-chamada">
-                        - - -
-                    </h2>
-                </div>
-                <div class="card-footer text-muted" id="card-footer-status">
-                    Aguarde a atualização. Não feche esta tela.
-                </div>
-            </div>
-        </div>
-    </div>
+                    <h2 class="display-5 text-success fw-bold" id="senha-chamada">
+                        - - -
+                    </h2>
+                </div>
+                <div class="card-footer text-muted" id="card-footer-status">
+                    Aguarde a atualização. Não feche esta tela.
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
-{% endblock %}
-
-{% block scripts %}
-<script>
-    const senhaIndividual = "{{ senha }}"; // Sua senha, ex: N001
-    const statusElement = document.getElementById('status-senha-individual');
-    const chamadaElement = document.getElementById('senha-chamada');
-    const cardPrincipal = document.getElementById('card-principal');
-    const cardFooter = document.getElementById('card-footer-status');
-
-    // CONEXÃO COM WEBSOCKETS (Channels)
-    const filaSocket = new WebSocket('ws://' + window.location.host + '/ws/fila/');
-
-    filaSocket.onopen = function(e) {
-        console.log('Conexão WebSocket aberta com sucesso!');
-    };
-
-    filaSocket.onmessage = function(e) {
-        const data = JSON.parse(e.data);
-        console.log('Mensagem recebida do servidor:', data);
-        
-        if (data.type === 'fila_update') {
-            const fullMessage = data.message; // Ex: "CHAMADA: N005" ou "FINALIZADA: P002"
-            
-            // Lógica para extrair ação e senha (ex: ACAO: SENHA)
-            const [action, senhaChamada] = fullMessage.split(': ');
-            
-            // 1. ATUALIZAÇÃO GERAL (Mostra a última chamada)
-            if (action === 'CHAMADA' || action === 'FINALIZADA') {
-                chamadaElement.innerText = senhaChamada;
-                chamadaElement.classList.add('text-success');
-            }
-            
-            // 2. ATUALIZAÇÃO INDIVIDUAL DA SUA SENHA
-            if (senhaChamada === senhaIndividual) {
-                
-                // Remove classes de status antigas
-                cardPrincipal.classList.remove('border-danger', 'border-warning', 'border-success', 'border-secondary');
-
-                if (action === 'CHAMADA') {
-                    statusElement.innerText = 'CHAMADA';
-                    cardPrincipal.classList.add('border-danger');
-                    cardFooter.innerText = '🚨 Por favor, dirija-se ao seu atendente!';
-                    
-                } else if (action === 'FINALIZADA') {
-                    statusElement.innerText = 'FINALIZADA';
-                    cardPrincipal.classList.add('border-success');
-                    cardFooter.innerText = '✅ Seu atendimento foi concluído!';
-                    
-                }
-                
-                // NOTA: Para atualizar a "posição na fila" em tempo real, 
-                // você precisaria fazer uma chamada AJAX para o servidor aqui.
-                // Como não temos essa view/rota, a posição só será atualizada com F5.
-            }
-        }
-    };
-
-    filaSocket.onclose = function(e) {
-        console.error('Conexão WebSocket fechada inesperadamente.');
-    };
-</script>
-{% endblock %}
+{% endblock content %}
