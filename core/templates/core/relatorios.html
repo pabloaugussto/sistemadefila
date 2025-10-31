@@ -22,9 +22,9 @@
         </div>
     </div>
 
-    {# Cards de Estatísticas Gerais #}
-    <div class="row">
-        <div class="col-md-6 mb-4">
+    <div class="row justify-content-center">
+        {# Card Total de Atendimentos #}
+        <div class="col-md-5 mb-4"> {# Alterado de col-md-6 para col-md-5 #}
             <div class="card text-center">
                 <div class="card-header">
                     Total de Atendimentos Hoje
@@ -34,7 +34,9 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-6 mb-4">
+
+        {# Card Tempo Médio de Atendimento #}
+        <div class="col-md-5 mb-4"> {# Alterado de col-md-6 para col-md-5 #}
             <div class="card text-center">
                 <div class="card-header">
                     Tempo Médio de Atendimento Hoje
@@ -47,8 +49,8 @@
         </div>
     </div>
 
-    <div class="row mt-4">
-        <div class="col-md-12">
+    <div class="row justify-content-center mt-4">
+        <div class="col-md-10"> {# Alterado de col-md-12 para col-md-10 #}
             <h3 class="mb-3">Atendimentos Hoje por Fila</h3>
             <div class="card">
                 <ul class="list-group list-group-flush">
@@ -64,13 +66,14 @@
             </div>
         </div>
     </div>
-    <hr class="my-4">
-    <h3 class="mb-3">Detalhes (Futuro)</h3>
-    <p class="text-muted">Em breve: Relatórios por fila, período, etc.</p>
+
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <hr class="my-4">
+            <h3 class="mb-3">Detalhes (Futuro)</h3>
+            <p class="text-muted">Em breve: Relatórios por fila, período, etc.</p>
+        </div>
+    </div>
 
 </div>
-{% endblock %}
-
-{% block scripts %}
-{# Bloco de scripts agora está vazio #}
 {% endblock %}
