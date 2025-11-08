@@ -1,42 +1,133 @@
 {% extends 'core/base.html' %}
-{% load static %} 
 
 {% block title %}Acompanhar Senha - SenhaFácil{% endblock %}
 
-{% block head_extras %}
-        <meta http-equiv="refresh" content="15">
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-7 col-lg-6">
+            <div class="card">
+                <div class="card-header text-center">
+                    {# Usamos a tag 'id' para o JS encontrar este elemento #}
+                    <h2 id="card-header-senha">Sua Senha: {{ senha }}</h2>
+                </div>
+                <div class="card-body p-4" id="card-body-status">
+
+                    <div class="row text-center my-3">
+                        
+                        {# Coluna 1: Status #}
+                        <div class="col-6">
+                            <p class="fs-5 text-muted">Status Atual:</p>
+                            {# Damos um 'id' para o JavaScript poder mudar o texto e a cor #}
+                            {% if senha.status == 'AGU' %}
+                                <h1 id="status-atual" class="display-4 fw-bold text-primary">AGUARDANDO</h1>
+                            {% elif senha.status == 'CHA' %}
+                                <h1 id="status-atual" class="display-4 fw-bold text-warning">CHAMADA</h1>
+                            {% elif senha.status == 'ATE' %}
+                                <h1 id="status-atual" class="display-4 fw-bold text-success">EM ATENDIMENTO</h1>
+                            {% elif senha.status == 'FIN' %}
+                                <h1 id="status-atual" class="display-4 fw-bold text-secondary">FINALIZADA</h1>
+                            {% endif %}
+                        </div>
+
+                        {# Coluna 2: Posição #}
+                        <div class="col-6">
+                            <p class="fs-5 text-muted">Sua posição na fila:</p>
+                            {# Damos um 'id' para o JavaScript poder mudar o texto #}
+                            {% if senha.status == 'AGU' %}
+                                <h1 id="posicao-fila" class="display-4 fw-bold">{{ posicao }}º</h1>
+                            {% else %}
+                                <h1 id="posicao-fila" class="display-4 fw-bold">-</h1>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <hr class="my-4" />
+
+                    <div class="text-center">
+                        <p class="fs-5 mt-4">Última senha chamada no painel:</p>
+                        <h2 class="display-6 text-muted" id="senha-chamada">- - -</h2>
+                    </div>
+                </div>
+                <div class="card-footer text-muted text-center">
+                    Aguarde a atualização. Não feche esta tela.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
-{% block content %}
-<div class="container text-center mt-5">
-    <div class="row">
-        <div class="col-md-6 offset-md-3">
-            <div class="card shadow-lg" id="card-principal">
-                <div class="card-header text-center bg-primary text-white">
-                    <h2><i class="bi bi-ticket-perforated"></i> Sua Senha: {{ senha }}</h2>
-                </div>
-                <div class="card-body">
-                    
-                    <p class="fs-5 mb-1">Status Atual:</p>
-                    <h1 class="display-3 fw-bold mb-4" id="status-senha-individual">
-                        {% if senha.status == 'AGU' %}AGUARDANDO{% elif senha.status == 'CHA' %}CHAMADA{% elif senha.status == 'ATE' %}EM ATENDIMENTO{% elif senha.status == 'FIN' %}FINALIZADA{% endif %}
-                    </h1>
+{% block scripts %}
+<script>
+    // --- LÓGICA DE ATUALIZAÇÃO EM TEMPO REAL SEM RECARREGAR ---
 
-                    <p class="fs-5">Sua posição na fila:</p>
-                    <h1 class="display-3 fw-bold mb-4" id="posicao-na-fila">{{ posicao }}º</h1>
-                    
-                    <hr />
+    // 1. Pega os elementos que vamos atualizar
+    const statusElement = document.getElementById('status-atual');
+    const posicaoElement = document.getElementById('posicao-fila');
+    const ultimaChamadaElement = document.getElementById('senha-chamada');
+    const cardBodyElement = document.getElementById('card-body-status');
+    const cardHeaderElement = document.getElementById('card-header-senha');
+    
+    // 2. Pega a senha desta página (enviada pelo Django)
+    const minhaSenha = "{{ senha }}";
 
-                    <p class="fs-5 mt-4">Última senha chamada no painel:</p>
-                    <h2 class="display-5 text-success fw-bold" id="senha-chamada">
-                        - - -
-                    </h2>
-                </div>
-                <div class="card-footer text-muted" id="card-footer-status">
-                    Aguarde a atualização. Não feche esta tela.
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-{% endblock content %}
+    // 3. Conecta ao WebSocket
+    const filaSocket = new WebSocket('ws://' + window.location.host + '/ws/fila/');
+
+    filaSocket.onopen = function(e) {
+        console.log('Conexão WebSocket aberta com sucesso!');
+    };
+
+    filaSocket.onclose = function(e) {
+        console.error('Conexão WebSocket fechada inesperadamente.');
+    };
+
+    // 4. Ouve as mensagens do servidor
+    filaSocket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        console.log('Mensagem recebida:', data.message); // Ex: "CHAMADA: P001"
+        
+        // Quebra a mensagem em "STATUS" e "SENHA"
+        // Ex: statusMsg = "CHAMADA", senhaMsg = "P001"
+        const [statusMsg, senhaMsg] = data.message.split(': ');
+
+        // Atualiza a "Última senha chamada" para todos os pacientes
+        if (senhaMsg) {
+            ultimaChamadaElement.innerText = senhaMsg;
+        }
+
+        // 5. Verifica se a mensagem é sobre ESTA senha
+        if (senhaMsg === minhaSenha) {
+            
+            // Atualiza o STATUS
+            if (statusMsg === 'CHAMADA') {
+                statusElement.innerText = 'CHAMADA';
+                statusElement.className = 'display-4 fw-bold text-warning'; // Muda a cor
+            } else if (statusMsg === 'ATE') {
+                statusElement.innerText = 'EM ATENDIMENTO';
+                statusElement.className = 'display-4 fw-bold text-success'; // Muda a cor
+            } else if (statusMsg === 'FINALIZADA') {
+                statusElement.innerText = 'FINALIZADA';
+                statusElement.className = 'display-4 fw-bold text-secondary'; // Muda a cor
+            }
+            
+            // Se o status não for mais "AGUARDANDO", a posição não importa
+            if (statusMsg !== 'AGU') {
+                posicaoElement.innerText = '-';
+            }
+
+            // (Opcional) Pisca o card de status para chamar a atenção
+            cardBodyElement.classList.add('bg-success-subtle');
+            cardHeaderElement.classList.add('bg-success', 'text-white');
+            setTimeout(function() {
+                cardBodyElement.classList.remove('bg-success-subtle');
+                // Mantém o cabeçalho verde se já estiver sendo atendido
+                if (statusMsg !== 'ATE' && statusMsg !== 'FINALIZADA') {
+                    cardHeaderElement.classList.remove('bg-success', 'text-white');
+                }
+            }, 1000); // Pisca por 1 segundo
+        }
+    };
+</script>
+{% endblock %}

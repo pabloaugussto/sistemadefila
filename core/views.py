@@ -134,20 +134,35 @@ def chamar_proxima_senha(request):
     return redirect('painel_atendente')
 
 
-@user_passes_test(is_staff) # Adicionado decorator seguro
+@user_passes_test(is_staff)
 def iniciar_atendimento(request, senha_id):
-    """Muda o status para Em Atendimento e registra o tempo inicial (RF15)."""
+    """Muda o status da senha chamada ('CHA') para 'Em Atendimento' ('ATE')."""
     senha = get_object_or_404(Senha, pk=senha_id)
-    
-    # Verifica se a senha está aguardando ou já foi chamada
+
+    # Só inicia se estiver Chamada (CHA) ou ainda Aguardando (AGU)
     if senha.status in ['CHA', 'AGU']:
-        senha.status = 'ATE' # Novo status 'Em Atendimento'
+        senha.status = 'ATE'
         senha.atendente = request.user
-        # Precisamos de um campo para hora_inicio_atendimento no models.Senha
-        # Vamos assumir que data_chamada serve para isso por enquanto
-        # senha.hora_inicio_atendimento = timezone.now() # Idealmente seria um campo novo
-        senha.save()
         
+        # --- CORREÇÃO AQUI ---
+        # Usando o nome de campo correto do seu modelo: 'hora_chamada'
+        if not senha.hora_chamada:
+             senha.hora_chamada = timezone.now()
+        # --- FIM DA CORREÇÃO ---
+        
+        senha.save()
+
+        # Bloco de notificação (que adicionamos antes, está correto)
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            'fila_geral',
+            {
+                'type': 'fila_update',
+                # Envia a mensagem com o novo status ATE
+                'message': f"ATE: {str(senha)}"
+            }
+        )
+
     return redirect('painel_atendente')
 
 @user_passes_test(is_staff)
