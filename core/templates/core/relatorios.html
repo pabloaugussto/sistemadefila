@@ -46,43 +46,49 @@
             </form>
         </div>
     </div>
-    <div class="row justify-content-center">
-        {# Card Total de Atendimentos #}
-        <div class="col-md-5 mb-4">
-            <div class="card text-center">
-                <div class="card-header">
-                    Total de Atendimentos no Período
-                </div>
-                <div class="card-body">
-                    {# Usamos a nova variável total_atendimentos #}
-                    <h1 class="display-4">{{ total_atendimentos }}</h1>
+    
+    {# BLOC MACRO DE ESTATÍSTICAS (COM AS MUDANÇAS DE LAYOUT E CORES) #}
+    <div class="row justify-content-center mb-5">
+        
+        {# Card 1: Total de Atendimentos - AZUL #}
+        <div class="col-md-5 col-lg-4 mb-4">
+            <div class="card text-center bg-primary text-white shadow-sm border-0 h-100">
+                <div class="card-body d-flex flex-column justify-content-center">
+                    <i class="bi bi-people-fill display-5 mb-2"></i> {# Ícone Didático #}
+                    <p class="card-text text-uppercase mb-0">Total de Atendimentos no Período</p>
+                    {# O número grande agora é Destaque #}
+                    <h1 class="display-2 fw-bold mt-1 mb-0">{{ total_atendimentos_hoje }}</h1>
+                    <p class="card-text text-white-50 mt-1">finalizados com sucesso</p>
                 </div>
             </div>
         </div>
 
-        {# Card Tempo Médio de Atendimento #}
-        <div class="col-md-5 mb-4">
-            <div class="card text-center">
-                <div class="card-header">
-                    Tempo Médio de Atendimento
-                </div>
-                <div class="card-body">
-                    <h1 class="display-4">{{ tempo_medio_minutos|floatformat:1 }}</h1>
-                    <p class="card-text text-muted">(minutos)</p>
+        {# Card 2: Tempo Médio de Atendimento - VERDE #}
+        <div class="col-md-5 col-lg-4 mb-4">
+            <div class="card text-center bg-success text-white shadow-sm border-0 h-100">
+                <div class="card-body d-flex flex-column justify-content-center">
+                    <i class="bi bi-clock-fill display-5 mb-2"></i> {# Ícone Didático #}
+                    <p class="card-text text-uppercase mb-0">Tempo Médio de Atendimento</p>
+                    {# O número grande agora é Destaque #}
+                    <h1 class="display-2 fw-bold mt-1 mb-0">{{ tempo_medio_minutos|floatformat:1 }}</h1>
+                    <p class="card-text text-white-50 mt-1">(minutos por atendimento)</p>
                 </div>
             </div>
         </div>
     </div>
+    {# FIM DO BLOCO MACRO DE ESTATÍSTICAS #}
 
-    <div class="row justify-content-center mt-4">
-        <div class="col-md-10">
-            <h3 class="mb-3">Atendimentos por Fila no Período</h3>
-            <div class="card">
+    {# BLOCO DA LISTA POR FILA (COM PEQUENOS AJUSTES VISUAIS) #}
+    <div class="row justify-content-center mt-4 mb-5">
+        <div class="col-md-10 col-lg-8">
+            <h3 class="mb-3"><i class="bi bi-list-ol"></i> Atendimentos por Fila no Período</h3>
+            <div class="card shadow-sm">
                 <ul class="list-group list-group-flush">
                     {% for item in relatorio_filas %}
                         <li class="list-group-item d-flex justify-content-between align-items-center">
-                            {{ item.nome }}
-                            <span class="badge bg-primary rounded-pill">{{ item.total }}</span>
+                            <span class="fw-bold">{{ item.nome }}</span>
+                            {# Usando bg-info (azul claro) para o badge #}
+                            <span class="badge bg-info text-dark rounded-pill py-2 px-3">{{ item.total }}</span>
                         </li>
                     {% empty %}
                         <li class="list-group-item text-muted">Nenhum atendimento finalizado neste período.</li>
@@ -91,6 +97,7 @@
             </div>
         </div>
     </div>
+    {# FIM DO BLOCO DA LISTA POR FILA #}
 
     <div class="row justify-content-center">
         <div class="col-md-10">

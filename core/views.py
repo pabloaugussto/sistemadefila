@@ -118,7 +118,7 @@ def chamar_proxima_senha(request):
         proxima_senha.atendente = request.user
         # --- VERIFIQUE ESTAS DUAS LINHAS COM MUITA ATENÇÃO ---
         proxima_senha.hora_chamada = timezone.now() # Define a hora atual
-        proxima_senha.save()                       # Salva a alteração no banco
+        proxima_senha.save() # Salva a alteração no banco
         # ---------------------------------------------------
 
         # Notificação em tempo real
@@ -239,19 +239,39 @@ def finalizar_atendimento(request, senha_id):
 @user_passes_test(is_staff)
 def painel_relatorios(request):
     hoje = date.today()
+    
+    # Lógica para filtrar por data, caso o usuário tenha submetido o formulário
+    data_inicio_str = request.GET.get('data_inicio')
+    data_fim_str = request.GET.get('data_fim')
+    
+    # Tenta converter as datas do GET, se não conseguir, usa o dia de hoje
+    try:
+        data_inicio = date.fromisoformat(data_inicio_str) if data_inicio_str else hoje
+    except ValueError:
+        data_inicio = hoje
+        
+    try:
+        data_fim = date.fromisoformat(data_fim_str) if data_fim_str else hoje
+    except ValueError:
+        data_fim = hoje
 
-    # Busca todos os atendimentos finalizados hoje
-    atendimentos_hoje = Historico.objects.filter(data_fim_atendimento__date=hoje)
+    # QuerySet filtrado pelo período (inclui atendimentos FINALIZADOS)
+    atendimentos_periodo = Historico.objects.filter(
+        data_fim_atendimento__date__gte=data_inicio,
+        data_fim_atendimento__date__lte=data_fim
+    )
 
-    # --- Estatísticas Gerais (Como estava) ---
-    total_atendimentos_hoje = atendimentos_hoje.count()
-    tempo_medio_segundos = atendimentos_hoje.aggregate(
+    # --- Estatísticas Gerais ---
+    total_atendimentos = atendimentos_periodo.count()
+    tempo_medio_segundos = atendimentos_periodo.aggregate(
         tempo_medio=Avg(F('data_fim_atendimento') - F('data_inicio_atendimento'))
     )['tempo_medio']
+    
+    # Converte delta de tempo para minutos
     tempo_medio_minutos = round(tempo_medio_segundos.total_seconds() / 60, 1) if tempo_medio_segundos else 0
 
-    # --- LÓGICA PARA A LISTA (Voltando ao que era) ---
-    atendimentos_por_fila = atendimentos_hoje.values(
+    # --- LÓGICA PARA A LISTA DE FILAS ---
+    atendimentos_por_fila = atendimentos_periodo.values(
         'senha__fila__nome' # O campo que queremos agrupar
     ).annotate(
         total=Count('id') # Conta quantos IDs tem em cada grupo
@@ -269,8 +289,10 @@ def painel_relatorios(request):
     # --- FIM DA LÓGICA DA LISTA ---
 
     contexto = {
-        'data_hoje': hoje,
-        'total_atendimentos_hoje': total_atendimentos_hoje,
+        # Enviando as datas reais usadas para o template exibir no título
+        'data_inicio': data_inicio, 
+        'data_fim': data_fim, 
+        'total_atendimentos_hoje': total_atendimentos, # RENOMEADO para ser mais geral (total do período)
         'tempo_medio_minutos': tempo_medio_minutos,
         'relatorio_filas': relatorio_filas, # <-- Enviando a lista para o template
     }
