@@ -60,74 +60,29 @@
 
 {% block scripts %}
 <script>
-    // --- LÓGICA DE ATUALIZAÇÃO EM TEMPO REAL SEM RECARREGAR ---
+    // --- SOLUÇÃO TEMPORÁRIA: RECARREGAMENTO FORÇADO ---
+    // Esta solução ignora o Django Channels e garante que o status 
+    // será atualizado a cada 5 segundos. Use apenas como fallback.
 
-    // 1. Pega os elementos que vamos atualizar
-    const statusElement = document.getElementById('status-atual');
-    const posicaoElement = document.getElementById('posicao-fila');
-    const ultimaChamadaElement = document.getElementById('senha-chamada');
-    const cardBodyElement = document.getElementById('card-body-status');
-    const cardHeaderElement = document.getElementById('card-header-senha');
-    
-    // 2. Pega a senha desta página (enviada pelo Django)
-    const minhaSenha = "{{ senha }}";
+    const reloadInterval = 5000; // 5 segundos
 
-    // 3. Conecta ao WebSocket
-    const filaSocket = new WebSocket('ws://' + window.location.host + '/ws/fila/');
-
-    filaSocket.onopen = function(e) {
-        console.log('Conexão WebSocket aberta com sucesso!');
-    };
-
-    filaSocket.onclose = function(e) {
-        console.error('Conexão WebSocket fechada inesperadamente.');
-    };
-
-    // 4. Ouve as mensagens do servidor
-    filaSocket.onmessage = function(e) {
-        const data = JSON.parse(e.data);
-        console.log('Mensagem recebida:', data.message); // Ex: "CHAMADA: P001"
+    function autoReload() {
+        // Apenas recarrega a página se o status não for 'FINALIZADA'
+        const statusElement = document.getElementById('status-atual');
         
-        // Quebra a mensagem em "STATUS" e "SENHA"
-        // Ex: statusMsg = "CHAMADA", senhaMsg = "P001"
-        const [statusMsg, senhaMsg] = data.message.split(': ');
-
-        // Atualiza a "Última senha chamada" para todos os pacientes
-        if (senhaMsg) {
-            ultimaChamadaElement.innerText = senhaMsg;
+        // Verifica se a senha já foi finalizada para não ficar recarregando
+        if (statusElement && statusElement.innerText !== 'FINALIZADA') {
+             location.reload(true); // O 'true' força o cache a ser ignorado
+        } else {
+            // Se já finalizou, para de recarregar
+            console.log("Senha finalizada. Parando o recarregamento automático.");
+            clearInterval(timerId);
         }
+    }
 
-        // 5. Verifica se a mensagem é sobre ESTA senha
-        if (senhaMsg === minhaSenha) {
-            
-            // Atualiza o STATUS
-            if (statusMsg === 'CHAMADA') {
-                statusElement.innerText = 'CHAMADA';
-                statusElement.className = 'display-4 fw-bold text-warning'; // Muda a cor
-            } else if (statusMsg === 'ATE') {
-                statusElement.innerText = 'EM ATENDIMENTO';
-                statusElement.className = 'display-4 fw-bold text-success'; // Muda a cor
-            } else if (statusMsg === 'FINALIZADA') {
-                statusElement.innerText = 'FINALIZADA';
-                statusElement.className = 'display-4 fw-bold text-secondary'; // Muda a cor
-            }
-            
-            // Se o status não for mais "AGUARDANDO", a posição não importa
-            if (statusMsg !== 'AGU') {
-                posicaoElement.innerText = '-';
-            }
+    // Inicia o timer
+    const timerId = setInterval(autoReload, reloadInterval);
 
-            // (Opcional) Pisca o card de status para chamar a atenção
-            cardBodyElement.classList.add('bg-success-subtle');
-            cardHeaderElement.classList.add('bg-success', 'text-white');
-            setTimeout(function() {
-                cardBodyElement.classList.remove('bg-success-subtle');
-                // Mantém o cabeçalho verde se já estiver sendo atendido
-                if (statusMsg !== 'ATE' && statusMsg !== 'FINALIZADA') {
-                    cardHeaderElement.classList.remove('bg-success', 'text-white');
-                }
-            }, 1000); // Pisca por 1 segundo
-        }
-    };
+    console.log("Aviso: Atualização automática em tempo real desativada. Usando recarregamento a cada 5 segundos.");
 </script>
 {% endblock %}
