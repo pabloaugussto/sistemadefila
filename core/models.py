@@ -11,6 +11,18 @@ class Fila(models.Model):
     def __str__(self):
         return self.nome
 
+# NOVO MODELO: Perfil do Atendente (RF05, RF06, RF19)
+class PerfilAtendente(models.Model):
+    # Relação 1:1 com o usuário do Django.
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='perfil_atendente')
+
+    # Relação Muitos-para-Muitos com o modelo Fila
+    filas_atendidas = models.ManyToManyField(Fila, blank=True)
+
+    def __str__(self):
+        return f"Perfil de {self.user.username}"
+
+
 class Senha(models.Model):
     STATUS_CHOICES = [
         ('AGU', 'Aguardando'),
@@ -22,17 +34,9 @@ class Senha(models.Model):
     fila = models.ForeignKey(Fila, on_delete=models.CASCADE)
     numero_senha = models.PositiveIntegerField()
     data_emissao = models.DateTimeField(default=timezone.now)
-    # Mescla: Mantendo a definição do campo Status (igual em ambas as versões)
     status = models.CharField(max_length=3, choices=STATUS_CHOICES, default='AGU')
     
     paciente = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
-    # ATENÇÃO: Havia data_chamada na versão remota e hora_chamada na versão local (HEAD).
-    # Vamos manter o campo 'hora_chamada' que usamos no código do views.py.
-    # Se 'data_chamada' tiver sido usado em algum lugar pelo seu colega, avise-me.
-    # Aqui, a linha 'data_chamada = models.DateTimeField(null=True, blank=True)' foi REMOVIDA
-    # pois a funcionalidade foi centralizada em 'hora_chamada' abaixo.
-
-    # Campos do Atendente (Mantido da sua versão HEAD - essencial para o sistema)
     atendente = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='senhas_atendidas', verbose_name='Atendente')
     
     hora_chamada = models.DateTimeField(null=True, blank=True)
@@ -54,7 +58,6 @@ class Paciente(models.Model):
     def __str__(self):
         return self.user.get_full_name() or self.user.username
     
-# NOVO MODELO: Historico (Adicionado do commit remoto - Essencial para relatórios)
 class Historico(models.Model):
     senha = models.OneToOneField(Senha, on_delete=models.CASCADE)
     atendente = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='atendimentos_realizados')

@@ -1,0 +1,79 @@
+{% extends "core/base.html" %}
+
+{% block title %}Gerenciar Perfil{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    {# Centraliza o conteúdo principal da página em relação ao container #}
+    <div class="row justify-content-center"> 
+        <div class="col-lg-10 col-xl-8"> 
+            
+            <h1 class="mb-3 text-center">Gerenciar Meu Perfil</h1>
+            <p class="text-center text-muted mb-5">
+                Atualize seus dados e selecione as filas que você está autorizado a atender.
+            </p>
+
+            <div class="row">
+                
+                {# Formulário de Dados do Usuário (50% da largura em telas médias/grandes) #}
+                <div class="col-md-6 mb-4">
+                    <div class="card shadow h-100">
+                        <div class="card-header bg-secondary text-white">
+                            <h5 class="mb-0">Dados Pessoais</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="post">
+                                {% csrf_token %}
+                                
+                                {{ user_form.as_p }} 
+                                
+                                <button type="submit" class="btn btn-primary mt-3">Salvar Dados</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                {# Formulário de Filas Atendidas (50% da largura em telas médias/grandes) #}
+                <div class="col-md-6 mb-4">
+                    <div class="card shadow h-100">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">Minhas Filas de Atendimento</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="post">
+                                {% csrf_token %}
+                                
+                                <label class="form-label" for="{{ perfil_form.filas_atendidas.id_for_label }}">
+                                    Filas que você atende:
+                                </label>
+                                
+                                {# Melhoria de Estilo: Usando form-check para listas de checkboxes #}
+                                <div class="form-group">
+                                    {% for radio in perfil_form.filas_atendidas %}
+                                    <div class="form-check">
+                                        {{ radio.tag }}
+                                        <label class="form-check-label" for="{{ radio.id_for_label }}">
+                                            {{ radio.choice_label }}
+                                        </label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                
+                                <button type="submit" class="btn btn-success mt-4">Atualizar Filas</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            
+            <div class="text-center mt-5">
+                <a href="{% url 'painel_atendente' %}" class="btn btn-outline-secondary btn-lg">
+                    <i class="bi bi-arrow-left"></i> Voltar ao Painel
+                </a>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

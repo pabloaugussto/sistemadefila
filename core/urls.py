@@ -2,23 +2,26 @@
 
 from django.urls import path
 from django.contrib.auth import views as auth_views
-from .forms import CustomAuthenticationForm # Para o login do paciente
+from .forms import CustomAuthenticationForm 
 from . import views
 
 urlpatterns = [
     # --- LOGIN DO PACIENTE (na raiz '/') ---
     path('', auth_views.LoginView.as_view(
-            template_name='core/login.html', # Template do paciente
-            authentication_form=CustomAuthenticationForm # Form que pede CPF
-        ), name='login'), # Nome continua 'login' para compatibilidade
+            template_name='core/login.html', 
+            authentication_form=CustomAuthenticationForm 
+        ), name='login'), 
 
     # --- NOVO LOGIN DO ATENDENTE ---
     path('atendente/login/', auth_views.LoginView.as_view(
-            template_name='core/atendente_login.html' # NOVO template
-            # Sem authentication_form, usa o padrão (pede Username)
-        ), name='atendente_login'), # NOVO nome para esta URL
-        path('redirect/', views.redirect_apos_login, name='redirect_apos_login'),
+            template_name='core/atendente_login.html' 
+        ), name='atendente_login'), 
+
+    path('redirect/', views.redirect_apos_login, name='redirect_apos_login'),
     path('relatorios/', views.painel_relatorios, name='painel_relatorios'),
+
+    # --- URL DE PERFIL (NOVA) ---
+    path('perfil/', views.gerenciar_perfil, name='gerenciar_perfil'),
 
     # --- OUTRAS URLS ---
     path('cadastro/', views.cadastro_paciente, name='cadastro'),

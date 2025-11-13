@@ -1,36 +1,66 @@
+# core/forms.py
+
 from django import forms
 from django.contrib.auth.models import User
-from .models import Paciente
 from django.contrib.auth.forms import AuthenticationForm
+from .models import Paciente, PerfilAtendente 
 
+# Formulários de autenticação e cadastro
+class CustomAuthenticationForm(AuthenticationForm):
+    username = forms.CharField(label="CPF", max_length=11, widget=forms.TextInput(attrs={'class': 'form-control'}))
 
 class UserForm(forms.ModelForm):
-    
-    password = forms.CharField(widget=forms.PasswordInput(), label="Senha")
+    password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control'}))
 
     class Meta:
         model = User
-        fields = ('first_name', 'last_name', 'email', 'password')
-        labels = {
-            'first_name': 'Nome',
-            'last_name': 'Sobrenome',
+        fields = ['first_name', 'last_name', 'email', 'password']
+        widgets = {
+            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
         }
 
 class PacienteForm(forms.ModelForm):
     class Meta:
         model = Paciente
-        fields = ('cpf',)
-
-# FORMULÁRIO: Para o Atendente registrar as observações (Mantido do seu HEAD)
+        fields = ['cpf']
+        widgets = {
+            'cpf': forms.TextInput(attrs={'class': 'form-control', 'maxlength': 11}),
+        }
+        
 class ObservacaoAtendimentoForm(forms.Form):
     observacoes = forms.CharField(
+        label='Observações do Atendimento',
         widget=forms.Textarea(attrs={'rows': 4, 'class': 'form-control'}),
-        required=False, 
-        label="Observações do Atendimento (Opcional)"
+        required=False
     )
+    
+# --- NOVOS FORMULÁRIOS DE PERFIL (RF05, RF06) ---
 
-# FORMULÁRIO: Customização do formulário de login (Adicionado do commit remoto)
-class CustomAuthenticationForm(AuthenticationForm):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['username'].label = 'CPF'
+class UserEditForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'email']
+        labels = {
+            'first_name': 'Nome',
+            'last_name': 'Sobrenome',
+            'email': 'E-mail',
+        }
+        widgets = {
+             'first_name': forms.TextInput(attrs={'class': 'form-control'}),
+             'last_name': forms.TextInput(attrs={'class': 'form-control'}),
+             'email': forms.EmailInput(attrs={'class': 'form-control'}),
+        }
+        
+class PerfilAtendenteForm(forms.ModelForm):
+    class Meta:
+        model = PerfilAtendente
+        fields = ['filas_atendidas']
+        labels = {
+            'filas_atendidas': 'Filas que você atende',
+        }
+        widgets = {
+            # Usa CheckboxSelectMultiple para facilitar a seleção de várias filas
+            'filas_atendidas': forms.CheckboxSelectMultiple(attrs={'class': 'form-check-input'})
+        }

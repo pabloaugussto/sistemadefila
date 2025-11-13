@@ -1,14 +1,19 @@
+# core/views.py
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Max
 from django.utils import timezone
-from .models import Fila, Senha, Paciente, Historico 
+# Importação atualizada para incluir PerfilAtendente
+from .models import Fila, Senha, Paciente, Historico, PerfilAtendente
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from django.contrib.auth.decorators import login_required, user_passes_test 
 from django.contrib.auth import login
-from .forms import UserForm, PacienteForm, ObservacaoAtendimentoForm # Importa o formulário de observações
-from django.db.models import Count, Avg, F # Para estatísticas
-from datetime import date # Para filtrar por data
+# Importação atualizada para incluir os novos forms de edição
+from .forms import UserForm, PacienteForm, ObservacaoAtendimentoForm, UserEditForm, PerfilAtendenteForm 
+from django.db.models import Count, Avg, F
+from datetime import date
+from django.db import transaction # Import para garantir que as alterações de perfil sejam atômicas
 
 
 # Função helper para checar se é staff 
@@ -40,7 +45,7 @@ def emitir_senha(request):
                 paciente=request.user
             )
             
-            # Notificação em tempo real (Mantida da versão da colega - mais descritiva)
+            # Notificação em tempo real
             channel_layer = get_channel_layer()
             async_to_sync(channel_layer.group_send)(
                 'fila_geral',
@@ -57,7 +62,6 @@ def emitir_senha(request):
 @login_required
 def acompanhar_senha(request, senha_id):
     senha = get_object_or_404(Senha, pk=senha_id)
-    # Lógica de posição da versão da colega (mais robusta)
     posicao = Senha.objects.filter(
         fila=senha.fila,
         status__in=['AGU', 'CHA', 'ATE'],
@@ -74,13 +78,11 @@ def acompanhar_senha(request, senha_id):
 # FUNÇÕES DO ATENDENTE
 # ==========================================================
 
-@login_required # Garante que só usuários logados acessem
+@login_required 
 def redirect_apos_login(request):
     if request.user.is_staff:
-        # Se for atendente/admin, vai para o painel
         return redirect('painel_atendente')
     else:
-        # Se for paciente, vai para a seleção de filas
         return redirect('selecionar_fila')
 
 
@@ -89,7 +91,7 @@ def painel_atendente(request):
     filas = Fila.objects.all()
     senhas_aguardando = {}
 
-    # CORREÇÃO AQUI: Usar 'hora_chamada' para ordenar
+    # Senhas que ESTE atendente está atendendo
     senhas_em_atendimento = Senha.objects.filter(status='ATE', atendente=request.user).order_by('hora_chamada')
 
     for fila in filas:
@@ -105,21 +107,33 @@ def painel_atendente(request):
 def chamar_proxima_senha(request):
     """Chama a próxima senha (prioritária primeiro) e muda status para 'CHA'."""
 
-    fila_prioritaria = Fila.objects.filter(sigla='P').first()
+    # Passo 1: Obter as filas que o atendente logado PODE atender (RF06/RF19)
+    try:
+        # Pega as filas que o atendente marcou no perfil. Se não marcou nenhuma, usa todas.
+        filas_permitidas = request.user.perfil_atendente.filas_atendidas.all()
+        if not filas_permitidas:
+            filas_a_buscar = Fila.objects.all()
+        else:
+            filas_a_buscar = filas_permitidas
+    except PerfilAtendente.DoesNotExist:
+        # Caso o perfil ainda não exista no banco (o .get_or_create da view de perfil resolve isso)
+        filas_a_buscar = Fila.objects.all()
+
+    # Passo 2: Tenta buscar a próxima senha prioritária (P) dentro das filas permitidas
+    fila_prioritaria = filas_a_buscar.filter(sigla='P').first()
     proxima_senha = None
     if fila_prioritaria:
         proxima_senha = Senha.objects.filter(fila=fila_prioritaria, status='AGU').order_by('data_emissao').first()
 
+    # Passo 3: Se não houver prioritária, busca a próxima senha AGU em QUALQUER fila permitida
     if not proxima_senha:
-        proxima_senha = Senha.objects.filter(status='AGU').order_by('data_emissao').first()
+        proxima_senha = Senha.objects.filter(fila__in=filas_a_buscar, status='AGU').order_by('data_emissao').first()
 
     if proxima_senha:
         proxima_senha.status = 'CHA'
         proxima_senha.atendente = request.user
-        # --- VERIFIQUE ESTAS DUAS LINHAS COM MUITA ATENÇÃO ---
-        proxima_senha.hora_chamada = timezone.now() # Define a hora atual
-        proxima_senha.save() # Salva a alteração no banco
-        # ---------------------------------------------------
+        proxima_senha.hora_chamada = timezone.now()
+        proxima_senha.save()
 
         # Notificação em tempo real
         channel_layer = get_channel_layer()
@@ -139,26 +153,20 @@ def iniciar_atendimento(request, senha_id):
     """Muda o status da senha chamada ('CHA') para 'Em Atendimento' ('ATE')."""
     senha = get_object_or_404(Senha, pk=senha_id)
 
-    # Só inicia se estiver Chamada (CHA) ou ainda Aguardando (AGU)
     if senha.status in ['CHA', 'AGU']:
         senha.status = 'ATE'
         senha.atendente = request.user
         
-        # --- CORREÇÃO AQUI ---
-        # Usando o nome de campo correto do seu modelo: 'hora_chamada'
         if not senha.hora_chamada:
              senha.hora_chamada = timezone.now()
-        # --- FIM DA CORREÇÃO ---
-        
+             
         senha.save()
 
-        # Bloco de notificação (que adicionamos antes, está correto)
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.group_send)(
             'fila_geral',
             {
                 'type': 'fila_update',
-                # Envia a mensagem com o novo status ATE
                 'message': f"ATE: {str(senha)}"
             }
         )
@@ -168,44 +176,33 @@ def iniciar_atendimento(request, senha_id):
 @user_passes_test(is_staff)
 def finalizar_atendimento(request, senha_id):
     """Muda status para 'Finalizada' ('FIN'), salva observações e cria Histórico."""
-    # Garante que só finalize o que está atendendo (status='ATE') e pertence ao atendente
     senha = get_object_or_404(Senha, pk=senha_id, atendente=request.user, status='ATE') 
 
-    # Verifica se o form de observação existe
-    form_class = ObservacaoAtendimentoForm if 'ObservacaoAtendimentoForm' in globals() and ObservacaoAtendimentoForm else None
-
+    # Tenta obter a classe do formulário
+    form_class = globals().get('ObservacaoAtendimentoForm')
+    
     if request.method == 'POST':
-        # Processa o formulário apenas se ele existir
         form = form_class(request.POST) if form_class else None 
-        
-        # Validação do formulário (se ele existir)
-        is_form_valid = form.is_valid() if form else True # Se não há form, considera válido
+        is_form_valid = form.is_valid() if form else True
 
         if is_form_valid:
-            # Salva observações se o campo e o form existirem
             if form and hasattr(senha, 'observacoes'):
-                 senha.observacoes = form.cleaned_data['observacoes']
+                senha.observacoes = form.cleaned_data['observacoes']
 
             hora_fim = timezone.now()
-            # Salva hora_fim se o campo existir
             if hasattr(senha, 'hora_fim_atendimento'):
                  senha.hora_fim_atendimento = hora_fim
 
             senha.status = 'FIN'
             senha.save()
 
-            # --- Criação do Histórico (CORRIGIDO) ---
-            # Verifica se hora_chamada existe antes de criar o histórico
-            if senha.hora_chamada: # <-- USA hora_chamada
+            if senha.hora_chamada:
                  Historico.objects.create(
                      senha=senha,
                      atendente=request.user,
-                     # Usa hora_chamada como início
-                     data_inicio_atendimento=senha.hora_chamada, # <-- USA hora_chamada
+                     data_inicio_atendimento=senha.hora_chamada,
                  )
-            # --- Fim Histórico ---
 
-            # Notificação em tempo real
             channel_layer = get_channel_layer()
             async_to_sync(channel_layer.group_send)(
                 'fila_geral',
@@ -215,10 +212,8 @@ def finalizar_atendimento(request, senha_id):
                 }
             )
 
-            # Redireciona de volta ao painel
             return redirect('painel_atendente')
             
-    # Lógica para GET (exibir o form, se existir)
     else: 
         if form_class:
             initial_obs = getattr(senha, 'observacoes', '') 
@@ -230,21 +225,14 @@ def finalizar_atendimento(request, senha_id):
         'senha': senha,
         'form': form
     }
-    # Renderiza o template de finalização (assumindo que existe)
     return render(request, 'core/finalizar_atendimento.html', contexto)
-# ==========================================================
-# FUNÇÕES DE AUTENTICAÇÃO
-# ==========================================================
 
 @user_passes_test(is_staff)
 def painel_relatorios(request):
     hoje = date.today()
-    
-    # Lógica para filtrar por data, caso o usuário tenha submetido o formulário
     data_inicio_str = request.GET.get('data_inicio')
     data_fim_str = request.GET.get('data_fim')
     
-    # Tenta converter as datas do GET, se não conseguir, usa o dia de hoje
     try:
         data_inicio = date.fromisoformat(data_inicio_str) if data_inicio_str else hoje
     except ValueError:
@@ -255,27 +243,23 @@ def painel_relatorios(request):
     except ValueError:
         data_fim = hoje
 
-    # QuerySet filtrado pelo período (inclui atendimentos FINALIZADOS)
     atendimentos_periodo = Historico.objects.filter(
         data_fim_atendimento__date__gte=data_inicio,
         data_fim_atendimento__date__lte=data_fim
     )
 
-    # --- Estatísticas Gerais ---
     total_atendimentos = atendimentos_periodo.count()
     tempo_medio_segundos = atendimentos_periodo.aggregate(
         tempo_medio=Avg(F('data_fim_atendimento') - F('data_inicio_atendimento'))
     )['tempo_medio']
     
-    # Converte delta de tempo para minutos
     tempo_medio_minutos = round(tempo_medio_segundos.total_seconds() / 60, 1) if tempo_medio_segundos else 0
 
-    # --- LÓGICA PARA A LISTA DE FILAS ---
     atendimentos_por_fila = atendimentos_periodo.values(
-        'senha__fila__nome' # O campo que queremos agrupar
+        'senha__fila__nome'
     ).annotate(
-        total=Count('id') # Conta quantos IDs tem em cada grupo
-    ).order_by('-total') # Ordena
+        total=Count('id')
+    ).order_by('-total')
 
     todas_filas = Fila.objects.all()
     relatorio_filas = []
@@ -286,21 +270,18 @@ def painel_relatorios(request):
             'nome': fila.nome,
             'total': mapa_atendimentos.get(fila.nome, 0)
         })
-    # --- FIM DA LÓGICA DA LISTA ---
 
     contexto = {
-        # Enviando as datas reais usadas para o template exibir no título
         'data_inicio': data_inicio, 
         'data_fim': data_fim, 
-        'total_atendimentos_hoje': total_atendimentos, # RENOMEADO para ser mais geral (total do período)
+        'total_atendimentos_hoje': total_atendimentos,
         'tempo_medio_minutos': tempo_medio_minutos,
-        'relatorio_filas': relatorio_filas, # <-- Enviando a lista para o template
+        'relatorio_filas': relatorio_filas,
     }
     
     return render(request, 'core/relatorios.html', contexto)
 
 def cadastro_paciente(request):
-    # (Conteúdo idêntico, mantido)
     if request.method == 'POST':
         user_form = UserForm(request.POST)
         paciente_form = PacienteForm(request.POST)
@@ -325,3 +306,29 @@ def cadastro_paciente(request):
         'paciente_form': paciente_form
     }
     return render(request, 'core/cadastro.html', contexto)
+
+# --- NOVO BLOCO: GERENCIAMENTO DE PERFIL ---
+@login_required
+def gerenciar_perfil(request):
+    # Tenta obter o perfil do atendente, ou o cria se for a primeira vez
+    perfil, created = PerfilAtendente.objects.get_or_create(user=request.user)
+
+    if request.method == 'POST':
+        user_form = UserEditForm(request.POST, instance=request.user)
+        perfil_form = PerfilAtendenteForm(request.POST, instance=perfil)
+        
+        if user_form.is_valid() and perfil_form.is_valid():
+            with transaction.atomic():
+                user_form.save()
+                perfil_form.save()
+            return redirect('gerenciar_perfil')
+    else:
+        user_form = UserEditForm(instance=request.user)
+        perfil_form = PerfilAtendenteForm(instance=perfil)
+        
+    contexto = {
+        'user_form': user_form,
+        'perfil_form': perfil_form,
+        'perfil': perfil,
+    }
+    return render(request, 'core/gerenciar_perfil.html', contexto)
