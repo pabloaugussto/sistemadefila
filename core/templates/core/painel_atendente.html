@@ -10,13 +10,18 @@
             <i class="bi bi-person-workspace"></i> Painel do Atendente - SenhaFácil
         </span>
         <div>
+            {# NOVO BOTÃO DE PERFIL ADICIONADO AQUI #}
+            <a href="{% url 'gerenciar_perfil' %}" class="btn btn-outline-warning me-2">
+                <i class="bi bi-person-gear"></i> Gerenciar Perfil
+            </a>
+            
             <a href="{% url 'painel_relatorios' %}" class="btn btn-outline-info me-2">
                 <i class="bi bi-graph-up"></i> Relatórios
             </a>
             <form action="{% url 'logout' %}" method="post" class="d-inline">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-outline-light">
-                     <i class="bi bi-box-arrow-right"></i> Sair
+                    <i class="bi bi-box-arrow-right"></i> Sair
                 </button>
             </form>
         </div>
@@ -44,9 +49,9 @@
     <hr>
     <h3 class="mb-3 text-primary"><i class="bi bi-person-check-fill"></i> Minhas Senhas em Atendimento</h3>
     
-    <div class="row justify-content-center"> {# ADICIONADO 'justify-content-center' #}
+    <div class="row justify-content-center">
     {% for senha in senhas_em_atendimento %}
-        <div class="col-md-6 mb-3"> {# A coluna de 6 agora ficará centralizada se estiver sozinha #}
+        <div class="col-md-6 mb-3">
             <div class="card border-primary">
                 <div class="card-body">
                     <h5 class="card-title">{{ senha.fila.sigla }}{{ senha.numero_senha }}</h5>
@@ -60,63 +65,96 @@
                 </div>
             </div>
         </div>
-        {% endfor %}
+    {% endfor %}
     </div>
     {% endif %}
 
     <hr class="my-4">
     <h3 class="mb-3"><i class="bi bi-people-fill"></i> Senhas na Fila (Aguardando/Chamadas)</h3>
 
-    {# Esta seção já deve estar correta, pois cria col-md-6 para cada fila #}
-    <div class="row">
-        {% for fila_nome, senhas in senhas_aguardando.items %}
-            <div class="col-md-6">
-                <div class="card mb-4">
-                    <div class="card-header">
-                        Fila: <strong>{{ fila_nome }}</strong> ({{ senhas|length }})
-                    </div>
-                    {% if senhas %}
-                    <ul class="list-group list-group-flush">
-                        {% for senha in senhas %}
-                            {% if senha.fila.sigla == 'P' %}
-                            <li class="list-group-item list-group-item-danger d-flex justify-content-between align-items-center">
-                            {% else %}
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                            {% endif %}
-                                <div>
-                                    <span class="badge bg-secondary me-2">{{ senha.fila.sigla }}{{ senha.numero_senha }}</span>
-                                    Paciente: {{ senha.paciente.get_full_name|default:senha.paciente.username }}
-                                    {% if senha.fila.sigla == 'P' %}
-                                        <span class="badge bg-danger rounded-pill ms-2">Prioritário</span>
-                                    {% endif %}
-                                    {% if senha.status == 'CHA' %}
-                                        <span class="badge bg-warning text-dark ms-2">CHAMADA por {{ senha.atendente.username }}</span>
-                                    {% endif %}
-                                </div>
-                                {% if senha.status == 'CHA' and senha.atendente == user %}
-                                <form action="{% url 'iniciar_atendimento' senha.id %}" method="post" class="ms-auto">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-sm btn-info text-white">
-                                        <i class="bi bi-play-circle-fill"></i> Iniciar Meu Atendimento
-                                    </button>
-                                </form>
-                                {% elif senha.status == 'AGU' %}
-                                 <span class="text-muted fst-italic">Aguardando chamada...</span>
-                                {% elif senha.status == 'CHA' and senha.atendente != user %}
-                                 <span class="text-warning fst-italic">Chamada por outro atendente</span>
+    {# Container para atualização AJAX/WebSocket (melhora a função atualizarListaSenhas) #}
+    <div id="lista-senhas-container"> 
+        <div class="row">
+            {% for fila_nome, senhas in senhas_aguardando.items %}
+                <div class="col-md-6">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            Fila: <strong>{{ fila_nome }}</strong> ({{ senhas|length }})
+                        </div>
+                        {% if senhas %}
+                        <ul class="list-group list-group-flush">
+                            {% for senha in senhas %}
+                                {# Linha 85: CORRIGIDO! A condição IF/ELSE não fechava o FOR. #}
+                                {% if senha.fila.sigla == 'P' %}
+                                <li class="list-group-item list-group-item-danger d-flex justify-content-between align-items-center">
+                                {% else %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
                                 {% endif %}
-                            </li>
-                        {% endfor %}
-                    </ul>
-                    {% else %}
-                    <div class="card-body">
-                        <p class="text-muted mb-0">Nenhuma senha nesta fila.</p>
+                                    <div>
+                                        <span class="badge bg-secondary me-2">{{ senha.fila.sigla }}{{ senha.numero_senha }}</span>
+                                        Paciente: {{ senha.paciente.get_full_name|default:senha.paciente.username }}
+                                        {% if senha.fila.sigla == 'P' %}
+                                            <span class="badge bg-danger rounded-pill ms-2">Prioritário</span>
+                                        {% endif %}
+                                        {% if senha.status == 'CHA' %}
+                                            <span class="badge bg-warning text-dark ms-2">CHAMADA por {{ senha.atendente.username }}</span>
+                                        {% endif %}
+                                    </div>
+                                    {% if senha.status == 'CHA' and senha.atendente == user %}
+                                    <form action="{% url 'iniciar_atendimento' senha.id %}" method="post" class="ms-auto">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-info text-white">
+                                            <i class="bi bi-play-circle-fill"></i> Iniciar Meu Atendimento
+                                        </button>
+                                    </form>
+                                    {% elif senha.status == 'AGU' %}
+                                        <span class="text-muted fst-italic">Aguardando chamada...</span>
+                                    {% elif senha.status == 'CHA' and senha.atendente != user %}
+                                        <span class="text-warning fst-italic">Chamada por outro atendente</span>
+                                    {% endif %}
+                                </li>
+                            {% endfor %} {# <-- Faltava o endfor aqui, era o erro de sintaxe! #}
+                        </ul>
+                        {% else %}
+                        <div class="card-body">
+                            <p class="text-muted mb-0">Nenhuma senha nesta fila.</p>
+                        </div>
+                        {% endif %}
                     </div>
-                    {% endif %}
                 </div>
-            </div>
-        {% endfor %}
+            {% endfor %}
+        </div>
     </div>
-
 </div>
+{% endblock %}
+
+{# --- ADIÇÃO DO BLOCO DE SCRIPTS COM O CÓDIGO DE ATUALIZAÇÃO AUTOMÁTICA --- #}
+{% block scripts %}
+<script>
+    // Usando um ID para garantir que apenas o conteúdo dinâmico seja recarregado
+    function atualizarListaSenhas() {
+        $('#lista-senhas-container').load(window.location.href + ' #lista-senhas-container > *');
+        console.log("Lista de senhas atualizada via AJAX.");
+    }
+
+    // --- LÓGICA DE WEBSOCKET (Django Channels) ---
+    
+    const socketProtocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+    
+    const filaSocket = new WebSocket(
+        socketProtocol + 
+        window.location.host +
+        '/ws/fila_geral/' 
+    );
+
+    filaSocket.onmessage = function(e) {
+        // Ao receber a mensagem, CHAMA A FUNÇÃO DE ATUALIZAÇÃO DE CONTEÚDO
+        atualizarListaSenhas(); 
+    };
+
+    filaSocket.onopen = function(e) {
+        console.log('Painel do Atendente conectado ao WebSocket.');
+    };
+    
+</script>
 {% endblock %}
