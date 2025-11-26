@@ -332,3 +332,15 @@ def gerenciar_perfil(request):
         'perfil': perfil,
     }
     return render(request, 'core/gerenciar_perfil.html', contexto)
+
+def cancelar_senha_paciente(request, id):
+    # Usamos get_object_or_404 por segurança. Se a senha não existir, dá erro 404 em vez de travar tudo.
+    senha = get_object_or_404(Senha, id=id)
+    
+    # Atualiza o status
+    senha.status = 'CAN' # Verifique se no seu model é 'C', 'CANCELADO' ou outro termo
+    senha.save()
+    
+    # Redireciona para a tela de login/inicial
+    # IMPORTANTE: Troque 'home' pelo 'name' da sua url principal no urls.py
+    return redirect('login')
