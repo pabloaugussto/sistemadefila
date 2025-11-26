@@ -5,9 +5,11 @@ Automat==25.4.16
 cffi==2.0.0
 channels==4.3.1
 constantly==23.10.4
+crispy-bootstrap5==2025.6
 cryptography==46.0.2
 daphne==4.2.1
 Django==5.2.6
+django-crispy-forms==2.5
 hyperlink==21.0.0
 idna==3.10
 incremental==24.7.2
