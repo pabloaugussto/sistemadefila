@@ -227,7 +227,15 @@ def finalizar_atendimento(request, senha_id):
     }
     return render(request, 'core/finalizar_atendimento.html', contexto)
 
-@user_passes_test(is_staff)
+# core/views.py
+
+from django.shortcuts import render
+from django.db.models import Avg, F, Count
+from datetime import date
+from .models import Historico, Fila # Certifique-se dos imports
+from django.contrib.auth.decorators import user_passes_test
+
+@user_passes_test(lambda u: u.is_staff)
 def painel_relatorios(request):
     hoje = date.today()
     data_inicio_str = request.GET.get('data_inicio')
@@ -243,12 +251,15 @@ def painel_relatorios(request):
     except ValueError:
         data_fim = hoje
 
+    # Filtro principal
     atendimentos_periodo = Historico.objects.filter(
         data_fim_atendimento__date__gte=data_inicio,
         data_fim_atendimento__date__lte=data_fim
     )
 
+    # --- Lógica Existente (Mantida) ---
     total_atendimentos = atendimentos_periodo.count()
+    
     tempo_medio_segundos = atendimentos_periodo.aggregate(
         tempo_medio=Avg(F('data_fim_atendimento') - F('data_inicio_atendimento'))
     )['tempo_medio']
@@ -271,12 +282,19 @@ def painel_relatorios(request):
             'total': mapa_atendimentos.get(fila.nome, 0)
         })
 
+    # --- NOVA PARTE: Preparar a lista para a tabela ---
+    # Ordenamos pelo fim do atendimento (do mais recente para o mais antigo)
+    lista_detalhada = atendimentos_periodo.order_by('-data_fim_atendimento')
+
     contexto = {
         'data_inicio': data_inicio, 
         'data_fim': data_fim, 
         'total_atendimentos_hoje': total_atendimentos,
         'tempo_medio_minutos': tempo_medio_minutos,
         'relatorio_filas': relatorio_filas,
+        
+        # AQUI ESTÁ O SEGREDO: Enviamos a lista para o HTML
+        'atendimentos_detalhados': lista_detalhada, 
     }
     
     return render(request, 'core/relatorios.html', contexto)
