@@ -1,0 +1,134 @@
+/* =============================== */
+/*   ESTILO PARA ACOMPANHAR SENHA */
+/* =============================== */
+
+:root {
+    --primary-blue: #3C7BFF;
+    --primary-green: #22C6A8;
+    --input-bg: #F5F7FB;
+    --border-color: #D9DEE8;
+    --text-dark: #333;
+    --text-light: #9AA4B8;
+    --radius: 14px;
+    --shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+
+/* =============================== */
+/*       BODY E CONTAINER          */
+/* =============================== */
+
+body {
+    background: #eef1f7 !important;
+    font-family: 'Poppins', sans-serif !important;
+}
+
+/* =============================== */
+/*              CARD               */
+/* =============================== */
+
+.card {
+    border-radius: var(--radius) !important;
+    box-shadow: var(--shadow) !important;
+    border: none !important;
+    overflow: hidden !important;
+    background: #fff !important;
+}
+
+/* HEADER DO CARD */
+.card-header {
+    background: linear-gradient(90deg, var(--primary-blue), var(--primary-green)) !important;
+    color: white !important;
+    padding: 1.5rem !important;
+    border-bottom: none !important;
+}
+
+.card-header h2 {
+    font-size: 1.8rem !important;
+    font-weight: 700 !important;
+}
+
+/* FOOTER DO CARD */
+.card-footer {
+    background: #f8f9fb !important;
+    font-size: 0.9rem;
+    padding: 1rem !important;
+    border-top: 1px solid #e6e6e6 !important;
+}
+
+/* =============================== */
+/*        TEXTO E TÍTULOS          */
+/* =============================== */
+
+#status-atual {
+    font-size: 2.0rem !important;
+}
+
+#posicao-fila {
+    font-size: 2.8rem !important;
+}
+
+#senha-chamada {
+    font-size: 2.3rem !important;
+    color: var(--text-light) !important;
+}
+
+/* Labels menores */
+.fs-5 {
+    color: var(--text-light) !important;
+    font-weight: 500 !important;
+}
+
+/* Linhas divisórias */
+hr {
+    border-top: 1px solid #e6e6e6 !important;
+    margin-top: 2rem !important;
+    margin-bottom: 2rem !important;
+}
+
+/* =============================== */
+/*         BOTÃO CANCELAR          */
+/* =============================== */
+
+.btn-outline-danger {
+    border-radius: var(--radius) !important;
+    padding: 0.9rem !important;
+    font-size: 1.05rem !important;
+    border-width: 2px !important;
+    font-weight: 600 !important;
+}
+
+.btn-outline-danger:hover {
+    background: #dc3545 !important;
+    color: white !important;
+    opacity: 0.9 !important;
+    border-color: #dc3545 !important;
+}
+
+/* =============================== */
+/*          RESPONSIVIDADE         */
+/* =============================== */
+
+@media (max-width: 576px) {
+    .card-header h2 {
+        font-size: 1.4rem !important;
+    }
+
+    #status-atual,
+    #posicao-fila {
+        font-size: 2.2rem !important;
+    }
+
+    #senha-chamada {
+        font-size: 1.8rem !important;
+    }
+}
+#status-atual {
+    text-align: center;
+    white-space: normal !important;
+}
+
+#status-atual .linha {
+    display: block;
+    font-size: 3rem;
+    font-weight: bold;
+}

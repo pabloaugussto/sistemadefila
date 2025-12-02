@@ -33,4 +33,5 @@ urlpatterns = [
     path('atendente/chamar/', views.chamar_proxima_senha, name='chamar_senha'),
     path('atendente/iniciar/<int:senha_id>/', views.iniciar_atendimento, name='iniciar_atendimento'),
     path('atendente/finalizar/<int:senha_id>/', views.finalizar_atendimento, name='finalizar_atendimento'),
+    path('cancelar-paciente/<int:id>/', views.cancelar_senha_paciente, name='cancelar_senha_paciente'),
 ]

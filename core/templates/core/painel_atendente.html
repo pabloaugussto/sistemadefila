@@ -11,13 +11,15 @@
         </span>
         <div>
             {# NOVO BOTÃO DE PERFIL ADICIONADO AQUI #}
-            <a href="{% url 'gerenciar_perfil' %}" class="btn btn-outline-warning me-2">
-                <i class="bi bi-person-gear"></i> Gerenciar Perfil
-            </a>
+            <a href="{% url 'gerenciar_perfil' %}" 
+   class="btn btn-warning me-2 text-white"> 
+    <i class="bi bi-person-gear"></i> Gerenciar Perfil
+</a>
             
-            <a href="{% url 'painel_relatorios' %}" class="btn btn-outline-info me-2">
-                <i class="bi bi-graph-up"></i> Relatórios
-            </a>
+<a href="{% url 'painel_relatorios' %}" 
+   class="btn btn-info me-2 text-white"> 
+    <i class="bi bi-graph-up"></i> Relatórios
+</a>
             <form action="{% url 'logout' %}" method="post" class="d-inline">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-outline-light">
@@ -59,9 +61,11 @@
                         Paciente: {{ senha.paciente.get_full_name|default:senha.paciente.username }}<br>
                         Chamada às: {{ senha.hora_chamada|date:"H:i:s" }}
                     </p>
-                    <a href="{% url 'finalizar_atendimento' senha.id %}" class="btn btn-primary btn-sm">
-                        <i class="bi bi-check-circle-fill"></i> Finalizar Atendimento
-                    </a>
+                    <a href="{% url 'finalizar_atendimento' senha.id %}" 
+   class="btn btn-primary btn-sm"
+   style="color: white !important;"> 
+    <i class="bi bi-check-circle-fill"></i> FAZER TRIAGEM 
+</a>
                 </div>
             </div>
         </div>
@@ -131,13 +135,20 @@
 {# --- ADIÇÃO DO BLOCO DE SCRIPTS COM O CÓDIGO DE ATUALIZAÇÃO AUTOMÁTICA --- #}
 {% block scripts %}
 <script>
-    // Usando um ID para garantir que apenas o conteúdo dinâmico seja recarregado
-    function atualizarListaSenhas() {
-        $('#lista-senhas-container').load(window.location.href + ' #lista-senhas-container > *');
-        console.log("Lista de senhas atualizada via AJAX.");
-    }
+// Atualização automática a cada 3s
+const reloadInterval = 3000;
 
-    // --- LÓGICA DE WEBSOCKET (Django Channels) ---
+function autoReload() {
+    location.reload();
+}
+
+setInterval(autoReload, reloadInterval);
+
+
+// Atualiza somente a lista via WebSocket
+function atualizarListaSenhas() {
+    $('#lista-senhas-container').load(window.location.href + ' #lista-senhas-container > *');
+}
     
     const socketProtocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
     

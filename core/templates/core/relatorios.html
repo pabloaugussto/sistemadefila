@@ -1,111 +1,138 @@
-{% extends 'core/base.html' %}
+{% extends 'core/base.html' %} 
 
-{% block title %}Painel de Relatórios{% endblock %}
+{% block title %}Painel de Relatórios - Sistema de Fila{% endblock %} 
 
 {% block content %}
-<div class="container mt-5">
-    <div class="row mb-4">
-        <div class="col-md-9">
-            <h2 class="mb-4"><i class="bi bi-graph-up"></i> Painel de Relatórios</h2>
-            {# Este título agora será dinâmico, baseado no filtro #}
-            <p class="text-muted">
-                Exibindo estatísticas para o período de 
-                {# Exibe as datas do filtro ou 'hoje' por defeito #}
-                <strong>{{ data_inicio|date:"d/m/Y" }}</strong> até <strong>{{ data_fim|date:"d/m/Y" }}</strong>
-            </p>
-        </div>
-        <div class="col-md-3 text-end align-self-center">
-            <a href="{% url 'painel_atendente' %}" class="btn btn-outline-secondary me-2">
-                <i class="bi bi-arrow-left-circle"></i> Voltar ao Painel
-            </a>
-            <form action="{% url 'logout' %}" method="post" class="d-inline">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-outline-danger">
-                    <i class="bi bi-box-arrow-right"></i> Sair
-                </button>
-            </form>
-        </div>
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Painel de Relatórios</h1>
+        <a href="{% url 'painel_atendente' %}" 
+   class="btn btn-secondary text-white">Voltar ao Painel</a>
     </div>
 
-    <div class="card mb-4">
+    <p class="text-muted">
+        Exibindo estatísticas para o período de
+        <strong>{{ data_inicio|date:"d/m/Y" }}</strong> até
+        <strong>{{ data_fim|date:"d/m/Y" }}</strong>
+    </p>
+
+    <div class="card mb-4 shadow-sm">
         <div class="card-body">
-            {# O método GET envia os dados pela URL #}
-            <form method="GET" action="{% url 'painel_relatorios' %}" class="row g-3 align-items-end">
+            <form method="get" class="row g-3 align-items-end">
                 <div class="col-md-5">
                     <label for="data_inicio" class="form-label">Data Início</label>
-                    {# O 'value' é preenchido com a data atual do filtro para que o usuário veja o que selecionou #}
-                    <input type="date" class="form-control" id="data_inicio" name="data_inicio" value="{{ data_inicio|date:'Y-m-d' }}">
+                    <input type="date" class="form-control" name="data_inicio" value="{{ data_inicio|date:'Y-m-d' }}" />
                 </div>
                 <div class="col-md-5">
                     <label for="data_fim" class="form-label">Data Fim</label>
-                    <input type="date" class="form-control" id="data_fim" name="data_fim" value="{{ data_fim|date:'Y-m-d' }}">
+                    <input type="date" class="form-control" name="data_fim" value="{{ data_fim|date:'Y-m-d' }}" />
                 </div>
-                <div class="col-md-2 d-grid">
-                    <button type="submit" class="btn btn-primary">Filtrar</button>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">Filtrar</button>
                 </div>
             </form>
         </div>
     </div>
-    
-    {# BLOC MACRO DE ESTATÍSTICAS (COM AS MUDANÇAS DE LAYOUT E CORES) #}
-    <div class="row justify-content-center mb-5">
-        
-        {# Card 1: Total de Atendimentos - AZUL #}
-        <div class="col-md-5 col-lg-4 mb-4">
-            <div class="card text-center bg-primary text-white shadow-sm border-0 h-100">
-                <div class="card-body d-flex flex-column justify-content-center">
-                    <i class="bi bi-people-fill display-5 mb-2"></i> {# Ícone Didático #}
-                    <p class="card-text text-uppercase mb-0">Total de Atendimentos no Período</p>
-                    {# O número grande agora é Destaque #}
-                    <h1 class="display-2 fw-bold mt-1 mb-0">{{ total_atendimentos_hoje }}</h1>
-                    <p class="card-text text-white-50 mt-1">finalizados com sucesso</p>
+
+    <div class="row text-center mb-4">
+        <div class="col-md-6 mb-3">
+    <div class="card bg-primary h-100 shadow-sm"> 
+        <div class="card-body d-flex flex-column justify-content-center">
+                    <h5 class="card-title text-uppercase font-size-sm">
+                        Total de Atendimentos no Período
+                    </h5>
+                    <p class="display-4 fw-bold my-2">{{ total_atendimentos }}</p>
+                    <p class="card-text small">finalizados com sucesso</p>
                 </div>
             </div>
         </div>
-
-        {# Card 2: Tempo Médio de Atendimento - VERDE #}
-        <div class="col-md-5 col-lg-4 mb-4">
-            <div class="card text-center bg-success text-white shadow-sm border-0 h-100">
-                <div class="card-body d-flex flex-column justify-content-center">
-                    <i class="bi bi-clock-fill display-5 mb-2"></i> {# Ícone Didático #}
-                    <p class="card-text text-uppercase mb-0">Tempo Médio de Atendimento</p>
-                    {# O número grande agora é Destaque #}
-                    <h1 class="display-2 fw-bold mt-1 mb-0">{{ tempo_medio_minutos|floatformat:1 }}</h1>
-                    <p class="card-text text-white-50 mt-1">(minutos por atendimento)</p>
+        <div class="col-md-6 mb-3">
+           <div class="col-md-6 mb-3">
+    <div class="card bg-success h-100 shadow-sm">
+        <div class="card-body d-flex flex-column justify-content-center">
+                        Tempo Médio de Atendimento
+                    </h5>
+                    <p class="display-4 fw-bold my-2">{{ tempo_medio_minutos }}</p>
+                    <p class="card-text small">(minutos por atendimento)</p>
                 </div>
             </div>
         </div>
     </div>
-    {# FIM DO BLOCO MACRO DE ESTATÍSTICAS #}
 
-    {# BLOCO DA LISTA POR FILA (COM PEQUENOS AJUSTES VISUAIS) #}
-    <div class="row justify-content-center mt-4 mb-5">
-        <div class="col-md-10 col-lg-8">
-            <h3 class="mb-3"><i class="bi bi-list-ol"></i> Atendimentos por Fila no Período</h3>
-            <div class="card shadow-sm">
-                <ul class="list-group list-group-flush">
-                    {% for item in relatorio_filas %}
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <span class="fw-bold">{{ item.nome }}</span>
-                            {# Usando bg-info (azul claro) para o badge #}
-                            <span class="badge bg-info text-dark rounded-pill py-2 px-3">{{ item.total }}</span>
-                        </li>
-                    {% empty %}
-                        <li class="list-group-item text-muted">Nenhum atendimento finalizado neste período.</li>
-                    {% endfor %}
-                </ul>
+    <h3 class="mb-3">Atendimentos por Fila no Período</h3>
+    <div class="card shadow-sm mb-5">
+        <ul class="list-group list-group-flush">
+            {% for fila in relatorio_filas %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                {{ fila.nome }}
+                <span class="badge bg-info rounded-pill">{{ fila.total }}</span>
+            </li>
+            {% empty %}
+            <li class="list-group-item text-muted text-center">
+                Nenhum dado encontrado.
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <hr class="my-5" />
+
+    <h3 class="mb-3">Histórico Detalhado e Observações</h3>
+
+    <div class="card shadow-sm mb-5">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Senha</th>
+                            <th>Fila</th>
+                            <th>Paciente</th>
+                            <th>Atendente</th>
+                            <th>Data Finalização</th>
+                            <th>Observações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in atendimentos_detalhados %}
+                        <tr>
+                            <td>
+                                <span class="badge bg-secondary">{{ item.senha.numero_senha }}</span>
+                            </td>
+
+                            <td>{{ item.senha.fila.nome }}</td>
+
+                            <td class="fw-bold">
+                                {% if item.senha.paciente %}
+                                    {{ item.senha.paciente.first_name }} {{ item.senha.paciente.last_name }}
+                                {% else %}
+                                    <span class="text-muted fst-italic">Não informado</span>
+                                {% endif %}
+                            </td>
+
+                            <td>{{ item.atendente.username|default:"-" }}</td>
+
+                            <td>{{ item.data_fim_atendimento|date:"d/m/Y H:i" }}</td>
+
+                            <td class="text-muted">
+                                {% if item.senha.observacoes %}
+                                    {{ item.senha.observacoes }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">
+                                Nenhum atendimento encontrado.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
-    {# FIM DO BLOCO DA LISTA POR FILA #}
-
-    <div class="row justify-content-center">
-        <div class="col-md-10">
-            <hr class="my-4">
-            <h3 class="mb-3">Detalhes (Futuro)</h3>
-            <p class="text-muted">Em breve: Relatórios por fila, período, etc.</p>
-        </div>
-    </div>
-
 </div>
 {% endblock %}

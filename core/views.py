@@ -227,59 +227,88 @@ def finalizar_atendimento(request, senha_id):
     }
     return render(request, 'core/finalizar_atendimento.html', contexto)
 
-@user_passes_test(is_staff)
+# core/views.py
+
+from django.shortcuts import render
+from django.db.models import Avg, F, Count
+from datetime import date
+from .models import Historico, Fila # Certifique-se dos imports
+from django.contrib.auth.decorators import user_passes_test
+
+@user_passes_test(lambda u: u.is_staff)
 def painel_relatorios(request):
     hoje = date.today()
+
+    # Coleta segura dos parâmetros GET
     data_inicio_str = request.GET.get('data_inicio')
     data_fim_str = request.GET.get('data_fim')
-    
+
+    # Conversão com fallback seguro
     try:
         data_inicio = date.fromisoformat(data_inicio_str) if data_inicio_str else hoje
     except ValueError:
         data_inicio = hoje
-        
+
     try:
         data_fim = date.fromisoformat(data_fim_str) if data_fim_str else hoje
     except ValueError:
         data_fim = hoje
 
+    # -------- FILTRO PRINCIPAL --------
     atendimentos_periodo = Historico.objects.filter(
         data_fim_atendimento__date__gte=data_inicio,
         data_fim_atendimento__date__lte=data_fim
     )
 
+    # -------- MÉTRICAS GERAIS --------
     total_atendimentos = atendimentos_periodo.count()
-    tempo_medio_segundos = atendimentos_periodo.aggregate(
-        tempo_medio=Avg(F('data_fim_atendimento') - F('data_inicio_atendimento'))
-    )['tempo_medio']
-    
-    tempo_medio_minutos = round(tempo_medio_segundos.total_seconds() / 60, 1) if tempo_medio_segundos else 0
 
+    tempo_medio_segundos = atendimentos_periodo.aggregate(
+        tempo_medio=Avg(F("data_fim_atendimento") - F("data_inicio_atendimento"))
+    )["tempo_medio"]
+
+    tempo_medio_minutos = (
+        round(tempo_medio_segundos.total_seconds() / 60, 1)
+        if tempo_medio_segundos else 0
+    )
+
+    # -------- ATENDIMENTOS POR FILA --------
     atendimentos_por_fila = atendimentos_periodo.values(
-        'senha__fila__nome'
+        "senha__fila__nome"
     ).annotate(
-        total=Count('id')
-    ).order_by('-total')
+        total=Count("id")
+    ).order_by("-total")
 
     todas_filas = Fila.objects.all()
-    relatorio_filas = []
-    mapa_atendimentos = {item['senha__fila__nome']: item['total'] for item in atendimentos_por_fila}
 
-    for fila in todas_filas:
-        relatorio_filas.append({
-            'nome': fila.nome,
-            'total': mapa_atendimentos.get(fila.nome, 0)
-        })
-
-    contexto = {
-        'data_inicio': data_inicio, 
-        'data_fim': data_fim, 
-        'total_atendimentos_hoje': total_atendimentos,
-        'tempo_medio_minutos': tempo_medio_minutos,
-        'relatorio_filas': relatorio_filas,
+    mapa_atendimentos = {
+        item["senha__fila__nome"]: item["total"]
+        for item in atendimentos_por_fila
     }
-    
-    return render(request, 'core/relatorios.html', contexto)
+
+    relatorio_filas = [
+        {
+            "nome": fila.nome,
+            "total": mapa_atendimentos.get(fila.nome, 0),
+        }
+        for fila in todas_filas
+    ]
+
+    # -------- LISTA DETALHADA --------
+    lista_detalhada = atendimentos_periodo.order_by("-data_fim_atendimento")
+
+    # -------- CONTEXTO FINAL --------
+    contexto = {
+        "data_inicio": data_inicio,
+        "data_fim": data_fim,
+        "total_atendimentos": total_atendimentos,   # HTML usa esse nome
+        "tempo_medio_minutos": tempo_medio_minutos,
+        "relatorio_filas": relatorio_filas,
+        "atendimentos_detalhados": lista_detalhada,
+    }
+
+    return render(request, "core/relatorios.html", contexto)
+
 
 def cadastro_paciente(request):
     if request.method == 'POST':
@@ -332,3 +361,15 @@ def gerenciar_perfil(request):
         'perfil': perfil,
     }
     return render(request, 'core/gerenciar_perfil.html', contexto)
+
+def cancelar_senha_paciente(request, id):
+    # Usamos get_object_or_404 por segurança. Se a senha não existir, dá erro 404 em vez de travar tudo.
+    senha = get_object_or_404(Senha, id=id)
+    
+    # Atualiza o status
+    senha.status = 'CAN' # Verifique se no seu model é 'C', 'CANCELADO' ou outro termo
+    senha.save()
+    
+    # Redireciona para a tela de login/inicial
+    # IMPORTANTE: Troque 'home' pelo 'name' da sua url principal no urls.py
+    return redirect('login')

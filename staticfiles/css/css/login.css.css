@@ -1,0 +1,113 @@
+/* =========================== */
+/*   TEMA MODERNO - LOGIN      */
+/* =========================== */
+
+:root {
+    --primary-blue: #3C7BFF;
+    --primary-green: #22C6A8;
+    --input-bg: #F5F7FB;
+    --border-color: #D9DEE8;
+    --text-dark: #333;
+    --text-light: #9AA4B8;
+    --radius: 12px;
+    --shadow: 0 4px 16px rgba(0,0,0,0.08);
+}
+
+/* =========================== */
+/*        BODY E PÁGINA        */
+/* =========================== */
+
+body {
+    background: #eef1f7 !important;
+    font-family: 'Poppins', sans-serif;
+}
+
+/* =========================== */
+/*            CARD             */
+/* =========================== */
+
+.card {
+    border-radius: var(--radius) !important;
+    box-shadow: var(--shadow) !important;
+    border: none !important;
+    overflow: hidden !important;
+}
+
+/* HEADER */
+.card-header {
+    background: linear-gradient(90deg, var(--primary-blue), var(--primary-green)) !important;
+    color: white !important;
+    border-bottom: none !important;
+    padding: 1.4rem !important;
+}
+
+.card-header h3 {
+    margin: 0 !important;
+    font-size: 1.35rem !important;
+    font-weight: 600 !important;
+}
+
+/* =========================== */
+/*            INPUTS           */
+/* =========================== */
+
+/* Inputs gerados por crispy e bootstrap */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+select,
+textarea,
+.form-control {
+    background: var(--input-bg) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: var(--radius) !important;
+    padding: 0.85rem !important;
+    font-size: 1rem !important;
+    color: var(--text-dark) !important;
+}
+
+.form-control:focus {
+    border-color: var(--primary-blue) !important;
+    box-shadow: 0 0 0 0.15rem rgba(60, 123, 255, 0.25) !important;
+}
+
+/* placeHolder */
+::placeholder {
+    color: var(--text-light) !important;
+}
+
+/* =========================== */
+/*            BOTÃO            */
+/* =========================== */
+
+button,
+.btn,
+.btn-primary {
+    background: linear-gradient(90deg, var(--primary-blue), var(--primary-green)) !important;
+    border: none !important;
+    border-radius: var(--radius) !important;
+    padding: 0.95rem !important;
+    font-weight: 600 !important;
+    font-size: 1.05rem !important;
+    transition: 0.2s ease-in-out !important;
+}
+
+button:hover,
+.btn:hover,
+.btn-primary:hover {
+    opacity: 0.9 !important;
+}
+
+/* =========================== */
+/*            LINKS            */
+/* =========================== */
+
+a {
+    color: var(--primary-blue) !important;
+    font-weight: 500 !important;
+}
+
+a:hover {
+    color: var(--primary-green) !important;
+}
