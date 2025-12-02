@@ -48,16 +48,22 @@
 
                     <div class="text-center">
                         <p class="fs-5 mt-4">Última senha chamada no painel:</p>
-                        <h2 class="display-6 text-muted" id="senha-chamada">- - -</h2>
+                       <h2 class="display-6 text-muted" id="senha-chamada">
+    {% if ultima_chamada %}
+        {{ ultima_chamada }}
+    {% else %}
+        - - -
+    {% endif %}
+</h2>
                     </div>
 
                     <div class="mt-5 text-center d-grid gap-2">
-                        <a href="{% url 'cancelar_senha_paciente' senha.id %}" 
-                           class="btn btn-outline-danger btn-lg"
-                           onclick="return confirm('Tem certeza que deseja cancelar sua senha? Você perderá seu lugar na fila.');">
-                            Cancelar Senha e Sair
-                        </a>
-                    </div>
+    <a href="{% url 'cancelar_senha_paciente' senha.id %}" 
+       class="btn btn-danger btn-lg text-white" 
+       onclick="return confirm('Tem certeza que deseja cancelar sua senha? Você perderá seu lugar na fila.');">
+        Cancelar Senha e Sair
+    </a>
+</div>
 
                 </div>
 

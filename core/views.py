@@ -66,6 +66,7 @@ def emitir_senha(request):
 @login_required
 def acompanhar_senha(request, senha_id):
     senha = get_object_or_404(Senha, pk=senha_id)
+
     posicao = (
         Senha.objects.filter(
             fila=senha.fila,
@@ -74,13 +75,21 @@ def acompanhar_senha(request, senha_id):
         ).count() + 1
     )
 
+    # 🔵 Buscar última senha chamada/atendida
+    ultima_chamada = Senha.objects.filter(
+        fila=senha.fila,
+        status__in=['CHA', 'ATE', 'FIN']
+    ).order_by('-hora_chamada').first()
+
     return render(
         request,
         'core/acompanhar_senha.html',
-        {'senha': senha, 'posicao': posicao}
+        {
+            'senha': senha,
+            'posicao': posicao,
+            'ultima_chamada': ultima_chamada
+        }
     )
-
-
 # ========================================
 # ATENDENTE
 # ========================================
