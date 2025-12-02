@@ -8,42 +8,34 @@
         <div class="col-md-7 col-lg-6">
             <div class="card">
                 <div class="card-header text-center">
-                    {# Usamos a tag 'id' para o JS encontrar este elemento #}
                     <h2 id="card-header-senha">Sua Senha: {{ senha }}</h2>
                 </div>
                 
                 <div class="card-body p-4" id="card-body-status">
 
                     <div class="row text-center my-3">
-                        
-                        {# Coluna 1: Status #}
-                        <div class="col-6">
-    <p class="fs-5 text-muted">Status Atual:</p>
-    {# Damos um 'id' para o JavaScript poder mudar o texto e a cor #}
-    
-    {% if senha.status == 'AGU' %}
-        {# ALTERAR h1 e display-4 para h3 e fs-3 #}
-        <h3 id="status-atual" class="fs-3 fw-bold text-primary">AGUARDANDO</h3>
-    {% elif senha.status == 'CHA' %}
-        {# ALTERAR h1 e display-4 para h3 e fs-3 #}
-        <h3 id="status-atual" class="fs-3 fw-bold text-warning">CHAMADA</h3>
-    {% elif senha.status == 'ATE' %}
-        {# ALTERAR h1 e display-4 para h3 e fs-3 #}
-        <h3 id="status-atual" class="fs-3 fw-bold text-success">EM ATENDIMENTO</h3>
-    {% elif senha.status == 'FIN' %}
-        {# ALTERAR h1 e display-4 para h3 e fs-3 #}
-        <h3 id="status-atual" class="fs-3 fw-bold text-secondary">FINALIZADA</h3>
-    {% else %}
-        {# Caso cancele e a página ainda esteja aberta #}
-        {# ALTERAR h1 e display-4 para h3 e fs-3 #}
-        <h3 id="status-atual" class="fs-3 fw-bold text-danger">CANCELADA</h3>
-    {% endif %}
-</div>
 
-                        {# Coluna 2: Posição #}
+                        <!-- COLUNA 1: STATUS -->
+                        <div class="col-6">
+                            <p class="fs-5 text-muted">Status Atual:</p>
+
+                            {% if senha.status == 'AGU' %}
+                                <h1 id="status-atual" class="display-4 fw-bold text-primary">AGUARDANDO</h1>
+                            {% elif senha.status == 'CHA' %}
+                                <h1 id="status-atual" class="display-4 fw-bold text-warning">CHAMADA</h1>
+                            {% elif senha.status == 'ATE' %}
+                                <h1 id="status-atual" class="display-4 fw-bold text-success">EM ATENDIMENTO</h1>
+                            {% elif senha.status == 'FIN' %}
+                                <h1 id="status-atual" class="display-4 fw-bold text-secondary">FINALIZADA</h1>
+                            {% else %}
+                                <h1 id="status-atual" class="display-4 fw-bold text-danger">CANCELADA</h1>
+                            {% endif %}
+                        </div>
+
+                        <!-- COLUNA 2: POSIÇÃO -->
                         <div class="col-6">
                             <p class="fs-5 text-muted">Sua posição na fila:</p>
-                            {# Damos um 'id' para o JavaScript poder mudar o texto #}
+
                             {% if senha.status == 'AGU' %}
                                 <h1 id="posicao-fila" class="display-4 fw-bold">{{ posicao }}º</h1>
                             {% else %}
@@ -60,13 +52,16 @@
                     </div>
 
                     <div class="mt-5 text-center d-grid gap-2">
-    <a href="{% url 'cancelar_senha_paciente' senha.id %}" 
-       class="btn btn-danger btn-lg text-white" 
-       onclick="return confirm('Tem certeza que deseja cancelar sua senha? Você perderá seu lugar na fila.');">
-        Cancelar Senha e Sair
-    </a>
-</div>
-                    </div> <div class="card-footer text-muted text-center">
+                        <a href="{% url 'cancelar_senha_paciente' senha.id %}" 
+                           class="btn btn-outline-danger btn-lg"
+                           onclick="return confirm('Tem certeza que deseja cancelar sua senha? Você perderá seu lugar na fila.');">
+                            Cancelar Senha e Sair
+                        </a>
+                    </div>
+
+                </div>
+
+                <div class="card-footer text-muted text-center">
                     Aguarde a atualização. Não feche esta tela.
                 </div>
             </div>
@@ -77,17 +72,16 @@
 
 {% block scripts %}
 <script>
-    // --- SOLUÇÃO TEMPORÁRIA: RECARREGAMENTO FORÇADO ---
+    // --- SOLUÇÃO TEMPORÁRIA: RECARREGAMENTO AUTOMÁTICO ---
     const reloadInterval = 5000; // 5 segundos
 
     function autoReload() {
-        // Apenas recarrega a página se o status não for 'FINALIZADA' nem 'CANCELADA'
         const statusElement = document.getElementById('status-atual');
         
         if (statusElement) {
             const textoStatus = statusElement.innerText;
             if (textoStatus !== 'FINALIZADA' && textoStatus !== 'CANCELADA') {
-                 location.reload(true); 
+                location.reload(true);
             } else {
                 console.log("Senha finalizada ou cancelada. Parando reload.");
                 clearInterval(timerId);
@@ -95,7 +89,6 @@
         }
     }
 
-    // Inicia o timer
     const timerId = setInterval(autoReload, reloadInterval);
     console.log("Atualização automática ativa (5s).");
 </script>
